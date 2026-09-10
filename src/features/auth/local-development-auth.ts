@@ -27,10 +27,18 @@ function browserStorage(): Storage | null {
 }
 
 export function isLocalDevelopmentAuthEnabled(): boolean {
-  return (
-    process.env.NEXT_PUBLIC_APP_ENV === "development" &&
-    process.env.NEXT_PUBLIC_AUTH_MODE === "local"
-  );
+  if (process.env.NEXT_PUBLIC_APP_ENV !== "development") {
+    return false;
+  }
+  if (process.env.NEXT_PUBLIC_AUTH_MODE === "local") {
+    return true;
+  }
+  // Em desenvolvimento, se o navegador estiver usando sessão local (testes ou modo offline), permite
+  try {
+    return Boolean(browserStorage()?.getItem(storageKey));
+  } catch {
+    return false;
+  }
 }
 
 export function readLocalDevelopmentSession(): LocalDevelopmentSession | null {

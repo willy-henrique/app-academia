@@ -53,6 +53,7 @@ import {
   persistActiveWorkoutSession,
   saveWorkoutSetWithOfflineFallback,
 } from "./offline-workout-store";
+import { AiCoachSection } from "./ai-coach-section";
 import { RestTimer } from "./rest-timer";
 import { WorkoutCompletion } from "./workout-completion";
 import { createWorkoutInit, finishStrengthSession } from "./workout-flow";

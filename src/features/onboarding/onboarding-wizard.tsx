@@ -145,6 +145,21 @@ const onboardingSteps: OnboardingStepDefinition[] = [
   },
 ];
 
+function formatDurationLabel(minutes: number | null | undefined): string {
+  if (!minutes || minutes <= 0) {
+    return "Não informado";
+  }
+  if (minutes < 60) {
+    return `${minutes} min`;
+  }
+  const hours = Math.floor(minutes / 60);
+  const remainingMinutes = minutes % 60;
+  if (remainingMinutes === 0) {
+    return `${hours}h`;
+  }
+  return `${hours}h ${remainingMinutes}min`;
+}
+
 const locationOptions = [
   { label: "Academia", value: "academia" },
   { label: "Em casa", value: "casa" },
@@ -156,6 +171,21 @@ const locationOptions = [
 const locationLabels: Record<string, string> = Object.fromEntries(
   locationOptions.map((option) => [option.value, option.label]),
 );
+
+const standardGymEquipments: readonly Equipment[] = [
+  "barbell",
+  "dumbbell",
+  "machine",
+  "cable",
+  "bench",
+  "smith_machine",
+  "plate_loaded_machine",
+  "pull_up_bar",
+  "cardio_machine",
+  "mat",
+  "step",
+  "bodyweight",
+];
 
 const selectableEquipment = equipmentOptions.filter((value) => value !== "other");
 const equipmentChips = selectableEquipment.map((value) => ({
@@ -271,7 +301,7 @@ function buildSummary(draft: OnboardingDraft): SummaryItem[] {
       value:
         [
           draft.routine.daysPerWeek ? `${draft.routine.daysPerWeek}× por semana` : null,
-          draft.routine.sessionMinutes ? `${draft.routine.sessionMinutes} min por treino` : null,
+          draft.routine.sessionMinutes ? `${formatDurationLabel(draft.routine.sessionMinutes)} por treino` : null,
         ]
           .filter(Boolean)
           .join(" · ") || notInformed,
@@ -607,19 +637,40 @@ export function OnboardingWizard({
                 value={draft.routine?.daysPerWeek ? String(draft.routine.daysPerWeek) : null}
                 onValueChange={(value) => update("routine.daysPerWeek", Number(value))}
               />
-              <NumberStepper
-                hint="Contando aquecimento. Dá para ajustar a qualquer momento."
-                label="Minutos por treino"
-                max={240}
-                min={10}
-                step={5}
-                unit="min"
-                value={draft.routine?.sessionMinutes ? String(draft.routine.sessionMinutes) : "45"}
-                onValueChange={(value) => {
-                  const minutes = Number.parseInt(value, 10);
-                  update("routine.sessionMinutes", Number.isFinite(minutes) ? minutes : null);
-                }}
-              />
+              <div className="space-y-3">
+                <NumberStepper
+                  hint={`Duração estimada: ${formatDurationLabel(draft.routine?.sessionMinutes ?? 45)} por sessão. Dá para ajustar a qualquer momento.`}
+                  label="Duração por treino"
+                  max={240}
+                  min={10}
+                  step={5}
+                  unit="min"
+                  value={draft.routine?.sessionMinutes ? String(draft.routine.sessionMinutes) : "45"}
+                  onValueChange={(value) => {
+                    const minutes = Number.parseInt(value, 10);
+                    update("routine.sessionMinutes", Number.isFinite(minutes) ? minutes : null);
+                  }}
+                />
+                <div className="flex flex-wrap gap-2 pt-1">
+                  {[30, 45, 60, 75, 90, 120].map((mins) => {
+                    const isSelected = (draft.routine?.sessionMinutes ?? 45) === mins;
+                    return (
+                      <button
+                        key={mins}
+                        type="button"
+                        onClick={() => update("routine.sessionMinutes", mins)}
+                        className={`rounded-wt-full px-3 py-1.5 text-xs font-semibold transition-colors duration-150 ${
+                          isSelected
+                            ? "bg-wt-accent-hover text-wt-accent-foreground shadow-sm"
+                            : "border border-wt-border bg-wt-surface text-wt-text-secondary hover:border-wt-border-strong hover:text-wt-text-primary"
+                        }`}
+                      >
+                        {formatDurationLabel(mins)}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
             </div>
           ) : null}
 
@@ -638,6 +689,11 @@ export function OnboardingWizard({
                   } else {
                     setOtherLocation(false);
                     update("location", value);
+                    if (value === "academia" || value === "academia_e_casa") {
+                      const currentEquip = getValues("equipment") ?? [];
+                      const merged = Array.from(new Set([...currentEquip, ...standardGymEquipments]));
+                      update("equipment", merged);
+                    }
                   }
                 }}
               />

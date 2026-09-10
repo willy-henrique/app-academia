@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 
 import { Card } from "@/components/ui/card";
 import { useAuthSession } from "@/features/auth/auth-session-provider";
@@ -12,6 +13,7 @@ import { OnboardingWizard } from "@/features/onboarding/onboarding-wizard";
 import { createDefaultOnboardingDraft, type OnboardingDraft } from "@/domain/onboarding/onboarding";
 
 export function OnboardingPageClient() {
+  const router = useRouter();
   const { user, status } = useAuthSession();
   const [draft, setDraft] = useState<OnboardingDraft | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -90,7 +92,7 @@ export function OnboardingPageClient() {
         {error ? (
           <Card className="border-wt-danger p-4 wt-text-body text-wt-danger">{error}</Card>
         ) : null}
-        <OnboardingWizard initialDraft={draft} onSaveDraft={persistDraft} />
+        <OnboardingWizard initialDraft={draft} onSaveDraft={persistDraft} onComplete={() => router.push("/workout")} />
       </div>
     </main>
   );
