@@ -12,7 +12,8 @@ export const metadata: Metadata = {
 };
 
 export const viewport: Viewport = {
-  themeColor: "#101418",
+  // Espelha --wt-color-background: a barra do navegador acompanha o tema claro.
+  themeColor: "#f7f8fa",
   width: "device-width",
   initialScale: 1,
   viewportFit: "cover",

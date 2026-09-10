@@ -5,7 +5,7 @@ export const metadata = {
 export default function OfflinePage() {
   return (
     <main
-      className="wt-page wt-page-grid flex max-w-3xl flex-col justify-center gap-3"
+      className="wt-page flex max-w-3xl flex-col justify-center gap-3"
       id="main-content"
     >
       <p className="wt-kicker">Modo offline</p>

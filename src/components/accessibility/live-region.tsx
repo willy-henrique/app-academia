@@ -21,7 +21,7 @@ export function LiveRegion({ children, politeness = "polite", visible = false }:
       aria-live={politeness}
       className={
         visible
-          ? "rounded-wt-md border border-wt-accent/25 bg-wt-accent/8 px-3 py-2 wt-text-body text-wt-text-primary"
+          ? "rounded-wt-lg bg-wt-surface-elevated px-4 py-3 text-wt-body-sm text-wt-text-primary"
           : "sr-only"
       }
       role={isAssertive ? "alert" : "status"}

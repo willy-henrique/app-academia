@@ -218,7 +218,10 @@ describe("GroupLobbyPageClient", () => {
       expect(setGroupParticipantOperationalState).toHaveBeenCalledWith("group-1", "PERFORMING_SET");
     });
 
+    // Sair é destrutivo: pede confirmação antes de encerrar a participação.
     fireEvent.click(screen.getByRole("button", { name: "Sair deste treino" }));
+    expect(leaveGroupSessionRequest).not.toHaveBeenCalled();
+    fireEvent.click(await screen.findByRole("button", { name: "Sair do treino" }));
     await waitFor(() => {
       expect(leaveGroupSessionRequest).toHaveBeenCalledWith("group-1");
     });
@@ -281,7 +284,7 @@ describe("GroupLobbyPageClient", () => {
       emitConnectionState?.("OFFLINE");
     });
     await waitFor(() => {
-      expect(screen.getByText(/offline · 2 série\(s\) guardada\(s\) neste aparelho/)).toBeTruthy();
+      expect(screen.getByText(/Offline · 2 séries guardadas neste aparelho/)).toBeTruthy();
     });
 
     act(() => {
@@ -292,9 +295,9 @@ describe("GroupLobbyPageClient", () => {
       expect(flushPendingGroupParticipantSetSyncs).toHaveBeenCalledTimes(1);
     });
     await waitFor(() => {
-      expect(screen.getByText("2 evento(s) locais sincronizado(s).")).toBeTruthy();
+      expect(screen.getByText("2 eventos locais sincronizados.")).toBeTruthy();
     });
-    expect(screen.queryByText(/guardada\(s\) neste aparelho/)).toBeNull();
+    expect(screen.queryByText(/guardadas neste aparelho/)).toBeNull();
   });
   it("closes only the caller's participation and keeps the group session running", async () => {
     useAuthSession.mockReturnValue({

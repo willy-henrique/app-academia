@@ -18,7 +18,7 @@ export default function LoginPage() {
     >
       <LoginForm onSuccess={() => router.replace("/dashboard")} />
       <Link
-        className="mt-4 inline-block font-semibold text-wt-accent underline"
+        className="mt-4 inline-block font-semibold text-wt-accent-text underline"
         href="/forgot-password"
       >
         Esqueci minha senha
@@ -37,7 +37,7 @@ export default function LoginPage() {
       />
       <p className="wt-text-body mt-5 text-wt-text-secondary-strong">
         Ainda não tem conta?{" "}
-        <Link className="font-semibold text-wt-accent underline" href="/signup">
+        <Link className="font-semibold text-wt-accent-text underline" href="/signup">
           Criar conta
         </Link>
       </p>

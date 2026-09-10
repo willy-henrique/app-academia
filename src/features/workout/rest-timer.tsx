@@ -1,6 +1,7 @@
 "use client";
 
 import { SkipForward, Timer } from "lucide-react";
+import { useEffect } from "react";
 
 import { Button } from "@/components/ui/button";
 import { ProgressBar } from "@/components/ui/progress-bar";
@@ -24,6 +25,28 @@ type RestTimerProps = Readonly<{
  * O número muda a cada segundo, então fica fora da árvore acessível; o leitor
  * de tela recebe um texto que só muda de estado (ver `WorkoutPageClient`).
  */
+
+function playBeep(freq = 880, duration = 0.15) {
+  if (typeof window === "undefined") return;
+  try {
+    const AudioContext = window.AudioContext || (window as unknown as { webkitAudioContext: typeof window.AudioContext }).webkitAudioContext;
+    if (!AudioContext) return;
+    const ctx = new AudioContext();
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.type = "sine";
+    osc.frequency.setValueAtTime(freq, ctx.currentTime);
+    gain.gain.setValueAtTime(0.2, ctx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + duration);
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+    osc.start();
+    osc.stop(ctx.currentTime + duration);
+  } catch {
+    // áudio silencioso se bloqueado pelo browser
+  }
+}
+
 export function RestTimer({
   disabled,
   elapsedSeconds,
@@ -32,6 +55,15 @@ export function RestTimer({
   onSkip,
   remainingSeconds,
 }: RestTimerProps) {
+    // Beep tátil/sonoro sutil nos últimos 3 segundos para alertar o atleta sem precisar olhar a tela
+  useEffect(() => {
+    if (remainingSeconds === 3 || remainingSeconds === 2 || remainingSeconds === 1) {
+      playBeep(660, 0.1);
+    } else if (remainingSeconds === 0) {
+      playBeep(980, 0.25);
+    }
+  }, [remainingSeconds]);
+
   const targetSeconds = Math.max(1, elapsedSeconds + remainingSeconds);
 
   return (

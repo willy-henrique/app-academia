@@ -10,6 +10,8 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 
+import { Logo } from "@/components/brand/logo";
+
 const productSignals = [
   "Carga anterior em um toque",
   "Descanso calculado por tempo real",
@@ -51,16 +53,11 @@ export default function HomePage() {
 
         <header className="mx-auto flex min-h-20 w-full max-w-7xl items-center justify-between px-5 sm:px-8">
           <Link
-            className="flex items-center gap-2.5 text-wt-text-primary"
+            className="flex items-center rounded-wt-md"
             href="/"
             aria-label="WillTreino, início"
           >
-            <span className="grid size-9 place-items-center rounded-[0.8rem] bg-wt-accent text-xs font-black text-wt-accent-foreground shadow-[0_0_0_5px_var(--wt-color-accent-subtle)]">
-              WT
-            </span>
-            <span className="font-[family-name:var(--wt-font-family-display)] text-xl font-extrabold tracking-[-0.05em]">
-              WillTreino
-            </span>
+            <Logo />
           </Link>
           <div className="flex items-center gap-2 sm:gap-3">
             <Link
@@ -263,15 +260,13 @@ export default function HomePage() {
       <footer className="border-t border-wt-border bg-wt-surface">
         <div className="mx-auto flex w-full max-w-7xl flex-col gap-5 px-5 py-10 sm:flex-row sm:items-center sm:justify-between sm:px-8">
           <div>
-            <p className="font-[family-name:var(--wt-font-family-display)] text-lg font-extrabold tracking-[-0.04em]">
-              WillTreino
-            </p>
+            <Logo size="sm" />
             <p className="mt-1 text-sm text-wt-text-secondary-strong">
               Treino claro, progresso real, privacidade por padrão.
             </p>
           </div>
           <Link
-            className="inline-flex min-h-11 items-center gap-2 font-bold text-wt-accent hover:underline"
+            className="inline-flex min-h-11 items-center gap-2 font-semibold text-wt-accent-text hover:underline"
             href="/signup"
           >
             Começar agora <ArrowRight aria-hidden="true" size={16} />

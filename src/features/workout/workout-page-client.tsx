@@ -53,6 +53,7 @@ import {
   persistActiveWorkoutSession,
   saveWorkoutSetWithOfflineFallback,
 } from "./offline-workout-store";
+import { PlateCalculator } from "./plate-calculator";
 import { AiCoachSection } from "./ai-coach-section";
 import { RestTimer } from "./rest-timer";
 import { WorkoutCompletion } from "./workout-completion";
@@ -342,6 +343,24 @@ export function WorkoutPageClient({ autosaveDelayMs = 550 }: WorkoutPageClientPr
     () => (activeExercise ? findLastResult(recentResults, activeExercise.exerciseId) : null),
     [activeExercise, recentResults],
   );
+
+  
+  const currentOneRm = useMemo(() => {
+    const l = Number.parseFloat(loadKg);
+    const r = Number.parseInt(reps, 10);
+    if (!Number.isFinite(l) || !Number.isFinite(r) || l <= 0 || r <= 0) return null;
+    return Math.round(l * (1 + r / 30));
+  }, [loadKg, reps]);
+
+  const lastOneRm = useMemo(() => {
+    if (!lastResult || lastResult.loadKg <= 0 || lastResult.reps <= 0) return null;
+    return Math.round(lastResult.loadKg * (1 + lastResult.reps / 30));
+  }, [lastResult]);
+
+  const isNewPr = useMemo(() => {
+    if (!currentOneRm || !lastOneRm) return false;
+    return currentOneRm > lastOneRm;
+  }, [currentOneRm, lastOneRm]);
 
   // Ao entrar em um exercício, os campos começam pela última carga usada (ou
   // mantêm a atual) e pela meta de repetições. É estado de tela, derivado
@@ -855,6 +874,11 @@ export function WorkoutPageClient({ autosaveDelayMs = 550 }: WorkoutPageClientPr
                       onValueChange={setReps}
                     />
                   </div>
+
+                  {/* Calculadora visual de anilhas para exercícios com barra livre */}
+                  {Boolean(exerciseDetails?.equipment?.includes("barbell")) || Number.parseFloat(loadKg) >= 25 ? (
+                    <PlateCalculator targetWeightKg={Number.parseFloat(loadKg) || 0} />
+                  ) : null}
                   <NumberStepper
                     className="sm:max-w-[calc(50%-0.5rem)]"
                     hint="Repetições que ainda sobravam no final da série."

@@ -3,9 +3,13 @@
 import { useState } from "react";
 import { httpsCallable } from "firebase/functions";
 
+import { Download, TriangleAlert } from "lucide-react";
+
 import { LiveRegion } from "@/components/accessibility/live-region";
+import { SectionHeader } from "@/components/layout/page-header";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
+import { Disclosure } from "@/components/ui/disclosure";
 import { Input } from "@/components/ui/input";
 import { useAuthSession } from "@/features/auth/auth-session-provider";
 import { getFirebaseClientServices } from "@/infrastructure/firebase/client";
@@ -74,40 +78,56 @@ export function AccountPrivacyPanel() {
   }
 
   return (
-    <Card className="space-y-4 p-5">
-      <div>
-        <h2 className="text-xl font-semibold">Privacidade e seus dados</h2>
-        <p className="wt-text-body text-wt-text-secondary">
-          Baixe uma cópia dos seus dados ou apague sua conta. A exclusão remove seus dados pessoais
-          e mantém o treino de quem participou das mesmas sessões.
-        </p>
-      </div>
+    <section aria-labelledby="privacy-title" className="space-y-3">
+      <SectionHeader
+        description="Baixe uma cópia dos seus dados ou apague sua conta (LGPD)."
+        id="privacy-title"
+        title="Privacidade e seus dados"
+      />
+      <Card className="space-y-5 p-5">
+        <div className="space-y-3">
+          <p className="text-wt-body-sm text-wt-text-secondary-strong">
+            Dados de saúde, medidas e adaptações são privados por padrão e nunca aparecem para
+            parceiros de treino.
+          </p>
+          <Button disabled={busy} variant="secondary" onClick={() => void exportData()}>
+            <Download aria-hidden="true" className="size-4" />
+            Baixar meus dados
+          </Button>
+        </div>
 
-      <Button disabled={busy} variant="secondary" onClick={() => void exportData()}>
-        Baixar meus dados
-      </Button>
-
-      <div className="space-y-2 rounded-wt-md border border-wt-danger p-4">
-        <p className="wt-text-body font-medium">Excluir minha conta</p>
-        <p className="wt-text-caption text-wt-text-secondary">
-          Esta ação é permanente. Digite {deletionConfirmation} para confirmar.
-        </p>
-        <Input
-          id="delete-confirmation"
-          label={`Confirmação (${deletionConfirmation})`}
-          value={confirmation}
-          onChange={(event) => setConfirmation(event.target.value)}
-        />
-        <Button
-          disabled={busy || confirmation !== deletionConfirmation}
-          variant="danger"
-          onClick={() => void deleteAccount()}
+        <Disclosure
+          className="border-wt-danger/40"
+          icon={<TriangleAlert />}
+          summary="Excluir minha conta"
         >
-          Excluir conta definitivamente
-        </Button>
-      </div>
+          <div className="space-y-3">
+            <p className="text-wt-body-sm text-wt-text-secondary-strong">
+              Esta ação é permanente. Remove seus dados pessoais e mantém o treino de quem
+              participou das mesmas sessões. Digite {deletionConfirmation} para confirmar.
+            </p>
+            <Input
+              autoCapitalize="characters"
+              autoComplete="off"
+              id="delete-confirmation"
+              label={`Confirmação (${deletionConfirmation})`}
+              value={confirmation}
+              onChange={(event) => setConfirmation(event.target.value)}
+            />
+            <Button
+              disabled={busy || confirmation !== deletionConfirmation}
+              variant="danger"
+              onClick={() => void deleteAccount()}
+            >
+              Excluir conta definitivamente
+            </Button>
+          </div>
+        </Disclosure>
 
-      <LiveRegion politeness="polite">{status}</LiveRegion>
-    </Card>
+        <LiveRegion politeness="polite" visible={status !== "Seus dados pertencem a você."}>
+          {status}
+        </LiveRegion>
+      </Card>
+    </section>
   );
 }

@@ -651,18 +651,19 @@ export function OnboardingWizard({
                     update("routine.sessionMinutes", Number.isFinite(minutes) ? minutes : null);
                   }}
                 />
-                <div className="flex flex-wrap gap-2 pt-1">
+                <div aria-label="Atalhos de duração" className="flex flex-wrap gap-2 pt-1" role="group">
                   {[30, 45, 60, 75, 90, 120].map((mins) => {
                     const isSelected = (draft.routine?.sessionMinutes ?? 45) === mins;
                     return (
                       <button
+                        aria-pressed={isSelected}
                         key={mins}
                         type="button"
                         onClick={() => update("routine.sessionMinutes", mins)}
-                        className={`rounded-wt-full px-3 py-1.5 text-xs font-semibold transition-colors duration-150 ${
+                        className={`inline-flex min-h-11 items-center rounded-wt-full px-4 text-wt-label font-semibold transition-colors duration-150 ${
                           isSelected
-                            ? "bg-wt-accent-hover text-wt-accent-foreground shadow-sm"
-                            : "border border-wt-border bg-wt-surface text-wt-text-secondary hover:border-wt-border-strong hover:text-wt-text-primary"
+                            ? "border border-wt-accent-border bg-wt-accent-subtle text-wt-accent-text"
+                            : "border border-wt-border bg-wt-surface text-wt-text-secondary-strong hover:border-wt-border-strong hover:text-wt-text-primary"
                         }`}
                       >
                         {formatDurationLabel(mins)}

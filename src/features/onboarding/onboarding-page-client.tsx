@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 
-import { Card } from "@/components/ui/card";
+import { LoadingState } from "@/components/ui/states";
 import { useAuthSession } from "@/features/auth/auth-session-provider";
 import {
   loadOnboardingDraft,
@@ -49,7 +49,9 @@ export function OnboardingPageClient() {
       } catch {
         if (isActive) {
           setDraft(createDefaultOnboardingDraft());
-          setError("Não foi possível carregar o rascunho do onboarding agora.");
+          setError(
+            "Não conseguimos carregar suas respostas anteriores. Você pode começar agora — o que preencher será salvo quando a conexão voltar.",
+          );
         }
       } finally {
         if (isActive) {
@@ -67,33 +69,37 @@ export function OnboardingPageClient() {
 
   if (status !== "authenticated") {
     return (
-      <main className="wt-page wt-page-grid flex max-w-3xl items-center">
-        <Card className="p-6">
-          <p className="wt-text-body text-wt-text-secondary">Você precisa entrar para continuar.</p>
-        </Card>
+      <main className="wt-page" id="main-content">
+        <p className="wt-text-body text-wt-text-secondary-strong">
+          Você precisa entrar para continuar.
+        </p>
       </main>
     );
   }
 
   if (isLoading || !draft) {
     return (
-      <main className="wt-page wt-page-grid flex max-w-3xl items-center">
-        <Card className="p-6">
-          <p className="wt-text-body text-wt-text-secondary">Carregando onboarding...</p>
-          {error ? <p className="mt-2 wt-text-body text-wt-danger">{error}</p> : null}
-        </Card>
+      <main className="wt-page max-w-[var(--wt-container-form)]" id="main-content">
+        <LoadingState label="Carregando suas respostas…" lines={4} />
       </main>
     );
   }
 
   return (
-    <main className="wt-page wt-page-grid max-w-4xl">
-      <div className="w-full space-y-4">
-        {error ? (
-          <Card className="border-wt-danger p-4 wt-text-body text-wt-danger">{error}</Card>
-        ) : null}
-        <OnboardingWizard initialDraft={draft} onSaveDraft={persistDraft} onComplete={() => router.push("/workout")} />
-      </div>
+    <main className="wt-page" id="main-content">
+      {error ? (
+        <p
+          className="mx-auto mb-6 max-w-[var(--wt-container-form)] rounded-wt-lg bg-wt-warning-subtle px-4 py-3 text-wt-body-sm text-wt-warning-text"
+          role="status"
+        >
+          {error}
+        </p>
+      ) : null}
+      <OnboardingWizard
+        initialDraft={draft}
+        onComplete={() => router.push("/workout")}
+        onSaveDraft={persistDraft}
+      />
     </main>
   );
 }

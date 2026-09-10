@@ -1,10 +1,14 @@
 "use client";
 
+import { Mail } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
 
 import { LiveRegion } from "@/components/accessibility/live-region";
+import { SectionHeader } from "@/components/layout/page-header";
+import { Avatar } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
+import { EmptyState } from "@/components/ui/states";
 import type { TrainingInvite } from "@/domain/group/training-invite";
 
 import {
@@ -43,7 +47,7 @@ export function TrainingInviteInbox({ onAccepted, uid }: TrainingInviteInboxProp
         } else if (next.length === 0) {
           setStatus("Nenhum convite pendente.");
         } else {
-          setStatus(`${next.length} convite(s) pendente(s).`);
+          setStatus(`${next.length} ${next.length === 1 ? "convite pendente" : "convites pendentes"}.`);
         }
         previousCount.current = next.length;
       },
@@ -79,49 +83,59 @@ export function TrainingInviteInbox({ onAccepted, uid }: TrainingInviteInboxProp
   }
 
   return (
-    <Card className="space-y-4">
-      <div className="space-y-1">
-        <h2 className="wt-text-title">{heading}</h2>
-        <p className="wt-text-body text-wt-text-secondary">
-          Parceiros só veem seu nome público e status durante o treino.
-        </p>
-      </div>
+    <section aria-labelledby="training-invites-title" className="space-y-3" id="convites">
+      <SectionHeader
+        description="Parceiros só veem seu nome público e seu status durante o treino."
+        id="training-invites-title"
+        title={heading}
+      />
 
       {invites.length === 0 ? (
-        <p className="wt-text-body text-wt-text-secondary">Nenhum convite pendente.</p>
+        <EmptyState
+          description="Quando alguém convidar você pelo seu WillTreino ID, o convite aparece aqui."
+          icon={<Mail />}
+          title="Nenhum convite pendente."
+        />
       ) : (
-        <ul className="space-y-3">
-          {invites.map((invite) => (
-            <li
-              key={invite.id}
-              className="space-y-3 rounded-wt-md border border-wt-border bg-wt-surface p-4"
-            >
-              <div className="space-y-1">
-                <p className="wt-text-body">
-                  <strong>{invite.senderDisplayName}</strong> convidou você para treinar.
-                </p>
-                <p className="wt-text-caption text-wt-text-secondary">
-                  WillTreino ID {invite.senderPublicUserId}
-                </p>
-              </div>
-              <div className="flex flex-wrap gap-3">
-                {(["ACCEPT", "DECLINE"] as const).map((action) => (
-                  <Button
-                    key={action}
-                    loading={pendingInviteId === invite.id}
-                    variant={action === "ACCEPT" ? "primary" : "outline"}
-                    onClick={() => void respond(invite.id, action)}
-                  >
-                    {actionLabels[action]}
-                  </Button>
-                ))}
-              </div>
-            </li>
-          ))}
-        </ul>
+        <Card as="div" className="p-2">
+          <ul className="divide-y divide-wt-border">
+            {invites.map((invite) => (
+              <li
+                key={invite.id}
+                className="flex flex-col gap-3 px-3 py-3 sm:flex-row sm:items-center"
+              >
+                <div className="flex min-w-0 flex-1 items-center gap-3">
+                  <Avatar name={invite.senderDisplayName} />
+                  <div className="min-w-0">
+                    <p className="text-wt-body-sm">
+                      <strong className="font-semibold">{invite.senderDisplayName}</strong> convidou
+                      você para treinar.
+                    </p>
+                    <p className="font-mono text-xs text-wt-text-secondary-strong">
+                      WillTreino ID {invite.senderPublicUserId}
+                    </p>
+                  </div>
+                </div>
+                <div className="flex gap-2">
+                  {(["ACCEPT", "DECLINE"] as const).map((action) => (
+                    <Button
+                      className="flex-1 sm:flex-none"
+                      key={action}
+                      loading={pendingInviteId === invite.id}
+                      variant={action === "ACCEPT" ? "primary" : "secondary"}
+                      onClick={() => void respond(invite.id, action)}
+                    >
+                      {actionLabels[action]}
+                    </Button>
+                  ))}
+                </div>
+              </li>
+            ))}
+          </ul>
+        </Card>
       )}
 
       <LiveRegion politeness="assertive">{status}</LiveRegion>
-    </Card>
+    </section>
   );
 }

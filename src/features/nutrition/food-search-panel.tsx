@@ -1,6 +1,6 @@
 "use client";
 
-import { Search, Sparkles } from "lucide-react";
+import { Info, NotebookPen, Plus, Search } from "lucide-react";
 import { FormEvent, useState } from "react";
 
 import type { Food } from "@/domain/nutrition/food";
@@ -8,9 +8,12 @@ import { estimateDefaultServingNutrition } from "@/domain/nutrition/food";
 import type { FoodLogEntry } from "@/domain/nutrition/food-log";
 import type { FoodProvider } from "@/application/nutrition/food-provider";
 import { createInternalFoodProvider } from "@/infrastructure/nutrition/internal-food-provider";
-import { Card } from "@/components/ui/card";
+import { PageHeader, SectionHeader } from "@/components/layout/page-header";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { EmptyState } from "@/components/ui/states";
 
 const defaultProvider = createInternalFoodProvider();
 
@@ -52,116 +55,100 @@ function FoodResultCard({
   const nutrition = estimateDefaultServingNutrition(food);
 
   return (
-    <article className="rounded-wt-md border border-wt-border bg-wt-background/45 p-4 transition-colors hover:border-wt-accent/40">
+    <Card as="article" className="space-y-4 p-4 sm:p-5">
       <div className="flex flex-wrap items-start justify-between gap-3">
-        <div>
-          <h2 className="text-base font-bold tracking-[-0.02em] text-wt-text-primary">
-            {food.name}
-          </h2>
-          <p className="mt-1 text-sm text-wt-text-secondary">{food.defaultServing.label}</p>
+        <div className="min-w-0">
+          <h2 className="wt-text-h3">{food.name}</h2>
+          <p className="mt-0.5 text-wt-body-sm text-wt-text-secondary-strong">
+            {food.defaultServing.label}
+          </p>
         </div>
-        <span className="rounded-wt-full border border-wt-accent/25 bg-wt-accent/10 px-2.5 py-1 text-xs font-bold text-wt-accent">
-          {getSourceLabel(food)}
-        </span>
+        <Badge tone="info">{getSourceLabel(food)}</Badge>
       </div>
 
       {nutrition ? (
         <dl
-          className="mt-4 grid grid-cols-4 gap-2"
+          className="m-0 grid grid-cols-4 gap-2"
           aria-label={`Estimativa para ${food.defaultServing.label}`}
         >
-          <div className="rounded-wt-sm bg-wt-surface px-2 py-2">
-            <dt className="text-[0.65rem] font-semibold uppercase tracking-[0.08em] text-wt-text-secondary">
-              Energia
-            </dt>
-            <dd className="mt-1 text-sm font-bold text-wt-text-primary">
-              {formatMacro(nutrition.energyKcal)} kcal
-            </dd>
-          </div>
-          <div className="rounded-wt-sm bg-wt-surface px-2 py-2">
-            <dt className="text-[0.65rem] font-semibold uppercase tracking-[0.08em] text-wt-text-secondary">
-              Proteína
-            </dt>
-            <dd className="mt-1 text-sm font-bold text-wt-text-primary">
-              {formatMacro(nutrition.proteinGrams)} g
-            </dd>
-          </div>
-          <div className="rounded-wt-sm bg-wt-surface px-2 py-2">
-            <dt className="text-[0.65rem] font-semibold uppercase tracking-[0.08em] text-wt-text-secondary">
-              Carbo
-            </dt>
-            <dd className="mt-1 text-sm font-bold text-wt-text-primary">
-              {formatMacro(nutrition.carbohydratesGrams)} g
-            </dd>
-          </div>
-          <div className="rounded-wt-sm bg-wt-surface px-2 py-2">
-            <dt className="text-[0.65rem] font-semibold uppercase tracking-[0.08em] text-wt-text-secondary">
-              Gordura
-            </dt>
-            <dd className="mt-1 text-sm font-bold text-wt-text-primary">
-              {formatMacro(nutrition.fatGrams)} g
-            </dd>
-          </div>
+          {[
+            ["Energia", `${formatMacro(nutrition.energyKcal)} kcal`],
+            ["Proteína", `${formatMacro(nutrition.proteinGrams)} g`],
+            ["Carbo", `${formatMacro(nutrition.carbohydratesGrams)} g`],
+            ["Gordura", `${formatMacro(nutrition.fatGrams)} g`],
+          ].map(([term, value]) => (
+            <div className="rounded-wt-md bg-wt-surface-elevated px-2 py-2" key={term}>
+              <dt className="text-[0.6875rem] font-semibold text-wt-text-secondary-strong">
+                {term}
+              </dt>
+              <dd className="m-0 mt-0.5 text-wt-body-sm font-bold text-wt-text-primary wt-tabular">
+                {value}
+              </dd>
+            </div>
+          ))}
         </dl>
       ) : (
-        <p className="mt-4 text-sm text-wt-text-secondary">
+        <p className="text-wt-body-sm text-wt-text-secondary-strong">
           A massa desta porção não é conhecida; por isso não calculamos macros por suposição.
         </p>
       )}
       {onAddFood ? (
         <Button
-          className="mt-4 w-full sm:w-auto"
+          className="w-full sm:w-auto"
           loading={isLogging}
           loadingLabel="Adicionando"
-          variant="secondary"
+          variant="tonal"
           onClick={onAddFood}
         >
+          <Plus aria-hidden="true" className="size-4" />
           Adicionar ao diário
         </Button>
       ) : null}
-    </article>
+    </Card>
   );
 }
 
 function FoodLogHistory({ entries }: Readonly<{ entries: readonly FoodLogEntry[] }>) {
   return (
-    <Card className="space-y-4 p-5 sm:p-6">
-      <div className="flex flex-wrap items-end justify-between gap-3">
-        <div>
-          <p className="wt-kicker">Somente você</p>
-          <h2 className="mt-2 text-xl font-extrabold tracking-[-0.035em]">Diário recente</h2>
-        </div>
-        <span className="text-sm font-semibold text-wt-text-secondary">
-          Dados privados por padrão
-        </span>
-      </div>
+    <section aria-labelledby="food-log-title" className="space-y-3">
+      <SectionHeader
+        description="Só você vê o que registra aqui."
+        id="food-log-title"
+        title="Diário recente"
+      />
 
       {entries.length === 0 ? (
-        <p className="rounded-wt-md border border-dashed border-wt-border p-4 text-sm text-wt-text-secondary">
-          Você ainda não registrou alimentos. Adicione um item do catálogo quando quiser.
-        </p>
+        <EmptyState
+          description="Busque um alimento e toque em “Adicionar ao diário” quando quiser."
+          icon={<NotebookPen />}
+          title="Você ainda não registrou alimentos."
+        />
       ) : (
-        <ul className="divide-y divide-wt-border/70">
-          {entries.map((entry) => (
-            <li className="flex flex-wrap items-center justify-between gap-3 py-3" key={entry.id}>
-              <div>
-                <p className="font-bold text-wt-text-primary">{entry.food.foodName}</p>
-                <p className="mt-1 text-sm text-wt-text-secondary">
-                  {mealLabels[entry.meal]} · {entry.portionGrams} g · {entry.nutrition.energyKcal}{" "}
-                  kcal
-                </p>
-              </div>
-              <span className="text-xs font-bold text-wt-text-secondary">
-                {new Date(entry.consumedAt).toLocaleDateString("pt-BR", {
-                  day: "2-digit",
-                  month: "short",
-                })}
-              </span>
-            </li>
-          ))}
-        </ul>
+        <Card as="div" className="p-2">
+          <ul className="divide-y divide-wt-border">
+            {entries.map((entry) => (
+              <li className="flex items-center justify-between gap-3 px-3 py-3" key={entry.id}>
+                <div className="min-w-0">
+                  <p className="truncate text-wt-label font-semibold text-wt-text-primary">
+                    {entry.food.foodName}
+                  </p>
+                  <p className="text-xs text-wt-text-secondary-strong">
+                    {mealLabels[entry.meal]} · {entry.portionGrams} g ·{" "}
+                    {entry.nutrition.energyKcal} kcal
+                  </p>
+                </div>
+                <span className="shrink-0 text-xs font-semibold text-wt-text-secondary-strong">
+                  {new Date(entry.consumedAt).toLocaleDateString("pt-BR", {
+                    day: "2-digit",
+                    month: "short",
+                  })}
+                </span>
+              </li>
+            ))}
+          </ul>
+        </Card>
       )}
-    </Card>
+    </section>
   );
 }
 
@@ -220,66 +207,65 @@ export function FoodSearchPanel({
   }
 
   return (
-    <main className="wt-page wt-page-grid mx-auto flex max-w-5xl flex-col gap-5" id="main-content">
-      <Card elevated className="space-y-5 p-5 sm:p-7">
-        <div className="max-w-2xl">
-          <p className="wt-kicker">WillFood · catálogo</p>
-          <h1 className="wt-section-title mt-3">Encontre o que faz sentido no seu prato.</h1>
-          <p className="mt-3 wt-text-body text-wt-text-secondary">
-            Consulte porções e macros aproximados com a origem do dado sempre visível. Esta busca
-            organiza informação — ela não substitui orientação profissional individual.
-          </p>
-        </div>
+    <main className="wt-page space-y-8" id="main-content">
+      <PageHeader
+        description="Porções e macros aproximados, sempre com a origem do dado. Organiza informação — não substitui orientação profissional."
+        title="Alimentação"
+      />
 
-        <form
-          className="flex flex-col gap-3 sm:flex-row sm:items-end"
-          onSubmit={(event) => void search(event)}
-        >
-          <div className="min-w-0 flex-1">
-            <Input
-              autoComplete="off"
-              hint="Ex.: arroz, feijão, frango ou banana"
-              label="Qual alimento você procura?"
-              name="food-search"
-              placeholder="Buscar no catálogo"
-              value={query}
-              onChange={(event) => setQuery(event.target.value)}
-            />
-          </div>
-          <Button
-            className="sm:mb-[1.75rem]"
-            loading={isSearching}
-            loadingLabel="Buscando"
-            type="submit"
+      <div className="grid gap-8 lg:grid-cols-[minmax(0,1.3fr)_minmax(0,1fr)] lg:items-start">
+        <div className="space-y-4">
+          <form
+            className="flex flex-col gap-3 sm:flex-row sm:items-end"
+            role="search"
+            onSubmit={(event) => void search(event)}
           >
-            <Search aria-hidden="true" size={18} />
-            Buscar
-          </Button>
-        </form>
+            <div className="min-w-0 flex-1">
+              <Input
+                autoComplete="off"
+                enterKeyHint="search"
+                hint="Ex.: arroz, feijão, frango ou banana"
+                label="Qual alimento você procura?"
+                name="food-search"
+                placeholder="Buscar no catálogo"
+                type="text"
+                value={query}
+                onChange={(event) => setQuery(event.target.value)}
+              />
+            </div>
+            <Button
+              className="sm:mb-[1.625rem]"
+              loading={isSearching}
+              loadingLabel="Buscando"
+              type="submit"
+            >
+              <Search aria-hidden="true" size={18} />
+              Buscar
+            </Button>
+          </form>
 
-        <div className="flex items-start gap-3 rounded-wt-md border border-wt-border/80 bg-wt-background/45 p-3 text-sm text-wt-text-secondary">
-          <Sparkles aria-hidden="true" className="mt-0.5 shrink-0 text-wt-accent" size={17} />
-          <p>
-            Catálogo inicial local, sem preços em tempo real. Informações externas e planejamento
-            alimentar entrarão somente com origem, licença e contexto explícitos.
+          <section aria-atomic="true" aria-live="polite" className="space-y-3">
+            <p className="text-wt-body-sm text-wt-text-secondary-strong" role="status">
+              {message}
+            </p>
+            {results?.map((food) => (
+              <FoodResultCard
+                food={food}
+                isLogging={loggingFoodId === food.id}
+                key={food.id}
+                onAddFood={onAddFood ? () => void addToFoodLog(food) : undefined}
+              />
+            ))}
+          </section>
+
+          <p className="flex items-start gap-2 wt-text-caption text-wt-text-secondary-strong">
+            <Info aria-hidden="true" className="mt-0.5 size-4 shrink-0" />
+            Catálogo inicial local, sem preços em tempo real. Informações externas entrarão somente
+            com origem, licença e contexto explícitos.
           </p>
         </div>
-      </Card>
-
-      <section aria-live="polite" aria-atomic="true" className="space-y-3">
-        <p className="wt-text-body text-wt-text-secondary" role="status">
-          {message}
-        </p>
-        {results?.map((food) => (
-          <FoodResultCard
-            food={food}
-            isLogging={loggingFoodId === food.id}
-            key={food.id}
-            onAddFood={onAddFood ? () => void addToFoodLog(food) : undefined}
-          />
-        ))}
-      </section>
-      {onAddFood ? <FoodLogHistory entries={entries} /> : null}
+        {onAddFood ? <FoodLogHistory entries={entries} /> : null}
+      </div>
     </main>
   );
 }

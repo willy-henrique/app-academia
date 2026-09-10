@@ -48,7 +48,7 @@ export function GoogleSignInButton({
 
   if (isLocalDevelopmentAuthEnabled()) {
     return (
-      <p className="rounded-wt-md border border-wt-accent/25 bg-wt-accent/8 px-3 py-2 text-sm text-wt-text-secondary">
+      <p className="rounded-wt-lg bg-wt-accent-subtle px-4 py-3 text-sm text-wt-accent-text">
         Modo local ativo: entre com email e uma senha de ao menos 6 caracteres. O Google só fica
         disponível quando o Firebase Auth estiver configurado.
       </p>

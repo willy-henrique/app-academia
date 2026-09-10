@@ -1,5 +1,8 @@
 "use client";
 
+import { Mail } from "lucide-react";
+
+import { SectionHeader } from "@/components/layout/page-header";
 import { Card } from "@/components/ui/card";
 
 import { useAuthSession } from "./auth-session-provider";
@@ -10,26 +13,37 @@ export function AccountSecurityPanel() {
   const { mode, user } = useAuthSession();
 
   return (
-    <Card className="space-y-6" elevated>
-      <div className="space-y-2">
-        <h1 className="wt-text-heading">Conta</h1>
-        <p className="wt-text-body text-wt-text-secondary">
-          Vincule seu Google à conta atual ou encerre a sessão com segurança.
-        </p>
-      </div>
-      <div className="space-y-1 rounded-wt-md border border-wt-border bg-wt-surface p-4">
-        <p className="wt-text-label text-wt-text-secondary">Email de acesso</p>
-        <p className="wt-text-body break-all">{user?.email ?? "Conta autenticada"}</p>
-      </div>
-      {mode === "firebase" ? (
-        <GoogleLinkButton />
-      ) : (
-        <p className="rounded-wt-md border border-wt-accent/25 bg-wt-accent/8 p-3 text-sm text-wt-text-secondary">
-          Esta é uma sessão local de desenvolvimento. Vinculação Google e dados de conta só são
-          habilitados no Firebase.
-        </p>
-      )}
-      <LogoutButton className="w-full" />
-    </Card>
+    <section aria-labelledby="account-security-title" className="space-y-3">
+      <SectionHeader
+        description="Vincule seu Google ou encerre a sessão com segurança."
+        id="account-security-title"
+        title="Acesso"
+      />
+      <Card className="space-y-4 p-5">
+        <div className="flex items-center gap-3">
+          <span
+            aria-hidden="true"
+            className="grid size-10 shrink-0 place-items-center rounded-wt-md bg-wt-surface-elevated text-wt-text-secondary-strong"
+          >
+            <Mail className="size-5" />
+          </span>
+          <div className="min-w-0">
+            <p className="wt-text-caption font-semibold text-wt-text-secondary-strong">
+              Email de acesso
+            </p>
+            <p className="text-wt-body-sm break-all">{user?.email ?? "Conta autenticada"}</p>
+          </div>
+        </div>
+        {mode === "firebase" ? (
+          <GoogleLinkButton />
+        ) : (
+          <p className="rounded-wt-lg bg-wt-accent-subtle px-4 py-3 text-wt-body-sm text-wt-accent-text">
+            Esta é uma sessão local de desenvolvimento. Vinculação Google e dados de conta só são
+            habilitados no Firebase.
+          </p>
+        )}
+        <LogoutButton className="w-full" />
+      </Card>
+    </section>
   );
 }

@@ -1,11 +1,31 @@
 "use client";
 
+import {
+  CircleCheck,
+  Clock3,
+  CloudOff,
+  Crown,
+  Dumbbell,
+  Hourglass,
+  LogOut,
+  PauseCircle,
+  RefreshCw,
+  ShieldCheck,
+  Timer,
+  Wifi,
+} from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
 
 import { LiveRegion } from "@/components/accessibility/live-region";
+import { PageHeader, SectionHeader } from "@/components/layout/page-header";
+import { Avatar } from "@/components/ui/avatar";
+import { Badge, type BadgeTone } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
+import { Dialog } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
+import { Select } from "@/components/ui/select";
+import { LoadingState } from "@/components/ui/states";
 import {
   estimateGroupLobbyDurationSeconds,
   resolveEquipmentTransitionSeconds,
@@ -32,20 +52,36 @@ import {
   type GroupConnectionState,
 } from "./group-offline-sync";
 
-function getParticipantOperationalLabel(
+type ParticipantStatus = Readonly<{ icon: typeof CircleCheck; label: string; tone: BadgeTone }>;
+
+/**
+ * Só o estado operacional é mostrado para os outros: pronto, executando,
+ * descansando… Carga, repetições e dados pessoais nunca aparecem aqui.
+ */
+function getParticipantStatus(
   participant: GroupParticipant,
   sessionStatus: string | undefined,
-): string {
-  if (participant.status === "COMPLETED") return "Concluiu o treino";
-  if (participant.status === "LEFT") return "Saiu do treino";
+): ParticipantStatus {
+  if (participant.status === "COMPLETED") {
+    return { icon: CircleCheck, label: "Concluiu o treino", tone: "success" };
+  }
+  if (participant.status === "LEFT") return { icon: LogOut, label: "Saiu do treino", tone: "neutral" };
   if (sessionStatus !== "ACTIVE") {
-    return participant.status === "READY" ? "Pronto" : "Aguardando";
+    return participant.status === "READY"
+      ? { icon: CircleCheck, label: "Pronto", tone: "success" }
+      : { icon: Hourglass, label: "Aguardando", tone: "neutral" };
   }
 
-  if (participant.operationalState === "PERFORMING_SET") return "Executando";
-  if (participant.operationalState === "RESTING") return "Descansando";
-  if (participant.operationalState === "PAUSED") return "Em pausa";
-  return "Aguardando a vez";
+  if (participant.operationalState === "PERFORMING_SET") {
+    return { icon: Dumbbell, label: "Executando", tone: "accent" };
+  }
+  if (participant.operationalState === "RESTING") {
+    return { icon: Timer, label: "Descansando", tone: "warning" };
+  }
+  if (participant.operationalState === "PAUSED") {
+    return { icon: PauseCircle, label: "Em pausa", tone: "neutral" };
+  }
+  return { icon: Hourglass, label: "Aguardando a vez", tone: "neutral" };
 }
 
 function formatDuration(totalSeconds: number): string {
@@ -65,6 +101,19 @@ function getWeightChangeSeconds(
   return Number.parseInt(customSeconds, 10) || 30;
 }
 
+const connectionLabels: Record<GroupConnectionState, string> = {
+  BACKGROUND: "Em segundo plano",
+  OFFLINE: "Offline",
+  ONLINE: "Online",
+  RECONNECTING: "Reconectando",
+};
+
+const operationalActions = [
+  { label: "Estou executando", state: "PERFORMING_SET" },
+  { label: "Estou descansando", state: "RESTING" },
+  { label: "Aguardando minha vez", state: "WAITING_TURN" },
+] as const;
+
 type GroupLobbyPageClientProps = Readonly<{
   sessionId: string;
 }>;
@@ -72,8 +121,10 @@ type GroupLobbyPageClientProps = Readonly<{
 export function GroupLobbyPageClient({ sessionId }: GroupLobbyPageClientProps) {
   const { status: authStatus, user } = useAuthSession();
   const [lobby, setLobby] = useState<GroupLobbySnapshot | null>(null);
+  const [lobbyResolved, setLobbyResolved] = useState(false);
   const [status, setStatus] = useState("Carregando lobby...");
   const [saving, setSaving] = useState(false);
+  const [confirmLeave, setConfirmLeave] = useState(false);
   const [sharedEquipmentMode, setSharedEquipmentMode] =
     useState<GroupLobbyConfiguration["sharedEquipmentMode"]>("FULL");
   const [stationMode, setStationMode] =
@@ -100,6 +151,7 @@ export function GroupLobbyPageClient({ sessionId }: GroupLobbyPageClientProps) {
       sessionId,
       (next) => {
         setLobby(next);
+        setLobbyResolved(true);
         if (!next) {
           setStatus("Lobby não encontrado ou indisponível.");
           return;
@@ -116,7 +168,10 @@ export function GroupLobbyPageClient({ sessionId }: GroupLobbyPageClientProps) {
         setStatus("Lobby sincronizado.");
       },
       {
-        onError: () => setStatus("Não foi possível sincronizar o lobby agora."),
+        onError: () => {
+          setLobbyResolved(true);
+          setStatus("Não foi possível sincronizar o lobby agora.");
+        },
       },
     );
   }, [sessionId, user]);
@@ -144,7 +199,9 @@ export function GroupLobbyPageClient({ sessionId }: GroupLobbyPageClientProps) {
         setConnectionState(window.navigator.onLine ? "ONLINE" : "OFFLINE");
         setPendingSyncCount(pendingCount);
         if (syncedCount > 0) {
-          setStatus(`${syncedCount} evento(s) locais sincronizado(s).`);
+          setStatus(
+            `${syncedCount} ${syncedCount === 1 ? "evento local sincronizado" : "eventos locais sincronizados"}.`,
+          );
         }
       })
       .catch(() => {
@@ -302,6 +359,7 @@ export function GroupLobbyPageClient({ sessionId }: GroupLobbyPageClientProps) {
     setSaving(true);
     try {
       await leaveGroupSessionRequest(sessionId);
+      setConfirmLeave(false);
       setStatus("Você saiu deste treino.");
     } catch {
       setStatus("Não foi possível sair da sessão agora.");
@@ -326,233 +384,323 @@ export function GroupLobbyPageClient({ sessionId }: GroupLobbyPageClientProps) {
     return null;
   }
 
-  return (
-    <main className="wt-page wt-page-grid max-w-5xl" id="main-content">
-      <div className="w-full space-y-4">
-        <Card elevated className="space-y-3 p-5 sm:p-7">
-          <p className="wt-kicker">Treino acompanhado</p>
-          <h1 className="wt-section-title">Preparem o treino</h1>
-          <p className="wt-text-body text-wt-text-secondary">
-            {readyCount} de {lobby?.participants.length ?? 0} pessoas prontas · estimativa prévia{" "}
-            {formatDuration(duration)}
-          </p>
-          <p className="wt-text-caption text-wt-text-secondary">
-            Conexão:{" "}
-            {connectionState === "RECONNECTING"
-              ? "reconectando"
-              : connectionState === "BACKGROUND"
-                ? "em segundo plano"
-                : connectionState === "OFFLINE"
-                  ? "offline"
-                  : "online"}
-            {pendingSyncCount > 0
-              ? ` · ${pendingSyncCount} série(s) guardada(s) neste aparelho`
-              : ""}
-          </p>
-          <LiveRegion politeness="assertive">{status}</LiveRegion>
-        </Card>
+  const sessionStatus = lobby?.session.status;
+  const participantCount = lobby?.participants.length ?? 0;
+  const title =
+    sessionStatus === "ACTIVE"
+      ? "Treinando juntos"
+      : sessionStatus === "COUNTDOWN"
+        ? "Prontos para começar"
+        : sessionStatus === "COMPLETED"
+          ? "Treino encerrado"
+          : "Sala de treino";
+  const connectionText = `${connectionLabels[connectionState]}${
+    pendingSyncCount > 0
+      ? ` · ${pendingSyncCount} ${pendingSyncCount === 1 ? "série guardada" : "séries guardadas"} neste aparelho`
+      : ""
+  }`;
+  const connectionTone: BadgeTone =
+    connectionState === "ONLINE" ? "success" : connectionState === "OFFLINE" ? "warning" : "info";
+  const canLeave =
+    sessionStatus === "ACTIVE" &&
+    ownParticipant !== null &&
+    ["ACTIVE", "PAUSED"].includes(ownParticipant.status);
 
-        <Card className="space-y-4 p-5 sm:p-7">
-          <h2 className="text-xl font-extrabold tracking-[-0.03em]">Participantes</h2>
-          <ul className="space-y-3">
-            {lobby?.participants.map((participant) => (
-              <li
-                key={participant.uid}
-                className="flex items-center justify-between gap-3 rounded-wt-md border border-wt-border bg-wt-surface p-4"
-              >
-                <div>
-                  <p className="wt-text-body font-medium">
-                    {participant.displaySnapshot.displayName}
-                  </p>
-                  <p className="wt-text-caption text-wt-text-secondary">
-                    {participant.role === "HOST" ? "Host" : "Participante"} ·{" "}
-                    {getParticipantOperationalLabel(participant, lobby?.session.status)}
+  return (
+    <main className="wt-page space-y-8" id="main-content">
+      <PageHeader
+        actions={
+          <Badge
+            icon={connectionState === "ONLINE" ? <Wifi /> : connectionState === "RECONNECTING" ? <RefreshCw /> : <CloudOff />}
+            tone={connectionTone}
+          >
+            {connectionText}
+          </Badge>
+        }
+        description={
+          lobby
+            ? `${readyCount} de ${participantCount} ${participantCount === 1 ? "pessoa pronta" : "pessoas prontas"} · estimativa ${formatDuration(duration)}`
+            : undefined
+        }
+        eyebrow="Treino acompanhado"
+        title={title}
+      />
+
+      <LiveRegion politeness="assertive">{status}</LiveRegion>
+
+      {!lobbyResolved ? (
+        <LoadingState label="Entrando na sala de treino…" lines={3} variant="list" />
+      ) : !lobby ? (
+        <Card className="space-y-2 p-5">
+          <h2 className="wt-text-h2">Sala indisponível</h2>
+          <p className="text-wt-body-sm text-wt-text-secondary-strong">
+            O convite pode ter expirado ou a sala já foi encerrada. Peça um novo convite para quem
+            vai treinar com você.
+          </p>
+        </Card>
+      ) : (
+        <div className="grid gap-8 lg:grid-cols-[minmax(0,1.1fr)_minmax(0,1fr)] lg:items-start">
+          <div className="space-y-6">
+            {sessionStatus === "COUNTDOWN" && countdownSeconds !== null ? (
+              <Card as="div" className="p-8 text-center" elevated>
+                <div aria-live="assertive" className="space-y-2">
+                  <p className="wt-kicker justify-center">Começando em</p>
+                  <h2 className="text-[4.5rem] font-extrabold leading-none tracking-[-0.04em] text-wt-accent-text wt-tabular">
+                    {countdownSeconds > 0 ? countdownSeconds : "VAMOS!"}
+                  </h2>
+                  <p className="text-wt-body-sm text-wt-text-secondary-strong">
+                    Todos os dispositivos usam o mesmo horário de início.
                   </p>
                 </div>
-                <span aria-hidden="true">
-                  {participant.operationalState === "PERFORMING_SET" ? "●" : "✓"}
-                </span>
-              </li>
-            ))}
-          </ul>
-          {lobby?.session.status === "LOBBY" &&
-          ownParticipant &&
-          ["INVITED", "READY"].includes(ownParticipant.status) ? (
-            <Button loading={saving} onClick={() => void updateReady()}>
-              {ownParticipant.status === "READY" ? "Ainda não estou pronto" : "Estou pronto"}
-            </Button>
-          ) : null}
-        </Card>
-
-        {isHost && lobby?.session.status === "LOBBY" ? (
-          <Card className="space-y-4 p-5 sm:p-7">
-            <div>
-              <h2 className="text-xl font-semibold">Configuração compartilhada</h2>
-              <p className="wt-text-body text-wt-text-secondary">
-                Essas opções só ajustam logística e tempo; cargas e adaptações continuam
-                individuais.
-              </p>
-            </div>
-            <label className="grid gap-2 text-wt-label" htmlFor="shared-equipment-mode">
-              Vocês compartilham aparelhos?
-              <select
-                id="shared-equipment-mode"
-                className="min-h-11 rounded-wt-md border border-wt-border bg-wt-surface px-3 text-wt-body"
-                value={sharedEquipmentMode}
-                onChange={(event) =>
-                  setSharedEquipmentMode(
-                    event.target.value as GroupLobbyConfiguration["sharedEquipmentMode"],
-                  )
-                }
-              >
-                <option value="FULL">Sim</option>
-                <option value="PARTIAL">Parcialmente</option>
-                <option value="NONE">Não</option>
-              </select>
-            </label>
-            <label className="grid gap-2 text-wt-label" htmlFor="station-mode">
-              Modo de estação
-              <select
-                id="station-mode"
-                className="min-h-11 rounded-wt-md border border-wt-border bg-wt-surface px-3 text-wt-body"
-                value={stationMode}
-                onChange={(event) =>
-                  setStationMode(event.target.value as GroupLobbyConfiguration["stationMode"])
-                }
-              >
-                <option value="ROTATION_SHARED_STATION">Revezamento no mesmo aparelho</option>
-                <option value="PARALLEL_SAME_EXERCISE">Mesmo exercício em paralelo</option>
-                <option value="INDEPENDENT_STATIONS">Estações independentes</option>
-              </select>
-            </label>
-            <label className="grid gap-2 text-wt-label" htmlFor="weight-change-mode">
-              Troca de carga
-              <select
-                id="weight-change-mode"
-                className="min-h-11 rounded-wt-md border border-wt-border bg-wt-surface px-3 text-wt-body"
-                value={weightChangeMode}
-                onChange={(event) =>
-                  setWeightChangeMode(
-                    event.target.value as GroupLobbyConfiguration["weightChangeMode"],
-                  )
-                }
-              >
-                <option value="FAST">Rápida · ~10 s</option>
-                <option value="NORMAL">Normal · ~20 s</option>
-                <option value="SLOW">Demorada · ~35 s</option>
-                <option value="CUSTOM">Personalizada</option>
-              </select>
-            </label>
-            {weightChangeMode === "CUSTOM" ? (
-              <Input
-                label="Segundos para trocar a carga"
-                inputMode="numeric"
-                min={1}
-                max={120}
-                type="number"
-                value={customWeightChangeSeconds}
-                onChange={(event) => setCustomWeightChangeSeconds(event.target.value)}
-              />
+              </Card>
             ) : null}
-            <Button loading={saving} onClick={() => void saveConfiguration()}>
-              Salvar configuração
-            </Button>
-          </Card>
-        ) : null}
 
-        {lobby?.session.status === "COUNTDOWN" || lobby?.session.status === "LOBBY" ? (
-          <Card className="p-5 sm:p-7">
-            {lobby?.session.status === "COUNTDOWN" && countdownSeconds !== null ? (
-              <div className="space-y-2" aria-live="assertive">
-                <h2 className="text-xl font-semibold">
-                  {countdownSeconds > 0 ? countdownSeconds : "VAMOS!"}
-                </h2>
-                <p className="wt-text-body text-wt-text-secondary">
-                  Todos os dispositivos usam o mesmo horário de início.
+            {sessionStatus === "LOBBY" &&
+            ownParticipant &&
+            ["INVITED", "READY"].includes(ownParticipant.status) ? (
+              <Card as="div" className="space-y-4 p-5" elevated>
+                <div className="space-y-1">
+                  <h2 className="wt-text-h2">
+                    {ownParticipant.status === "READY" ? "Você está pronto" : "Tudo certo por aí?"}
+                  </h2>
+                  <p className="text-wt-body-sm text-wt-text-secondary-strong">
+                    {ownParticipant.status === "READY"
+                      ? isHost
+                        ? everyoneReady
+                          ? "Todos prontos. Você já pode começar."
+                          : "Aguardando os outros confirmarem."
+                        : "Aguarde o anfitrião iniciar quando todos estiverem prontos."
+                      : "Confirme quando estiver no aparelho e pronto para começar."}
+                  </p>
+                </div>
+                <div className="grid gap-2 sm:flex">
+                  <Button
+                    loading={saving}
+                    size="xl"
+                    variant={ownParticipant.status === "READY" ? "secondary" : "primary"}
+                    onClick={() => void updateReady()}
+                  >
+                    {ownParticipant.status === "READY" ? "Ainda não estou pronto" : "Estou pronto"}
+                  </Button>
+                  {isHost ? (
+                    <Button
+                      disabled={!everyoneReady}
+                      loading={saving}
+                      size="xl"
+                      variant={everyoneReady ? "primary" : "secondary"}
+                      onClick={() => void startSession()}
+                    >
+                      Começar treino
+                    </Button>
+                  ) : null}
+                </div>
+                {isHost && !everyoneReady ? (
+                  <p className="wt-text-caption text-wt-text-secondary-strong">
+                    O início sincronizado é liberado quando todos estiverem prontos.
+                  </p>
+                ) : null}
+              </Card>
+            ) : null}
+
+            {canLeave && ownParticipant ? (
+              <Card as="div" className="space-y-5 p-5" elevated>
+                <div className="space-y-1">
+                  <h2 className="wt-text-h2">Seu status</h2>
+                  <p className="text-wt-body-sm text-wt-text-secondary-strong">
+                    O grupo vê só isto. Carga, repetições, RIR e dados pessoais continuam privados.
+                  </p>
+                </div>
+                <div aria-label="Seu status no treino" className="grid gap-2 sm:grid-cols-3" role="group">
+                  {operationalActions.map((action) => {
+                    const current = ownParticipant.operationalState === action.state;
+                    return (
+                      <Button
+                        aria-pressed={current}
+                        className={current ? "border-wt-accent-border bg-wt-accent-subtle text-wt-accent-text" : ""}
+                        disabled={saving}
+                        key={action.state}
+                        size="large"
+                        variant="secondary"
+                        onClick={() => void updateOperationalState(action.state)}
+                      >
+                        {action.label}
+                      </Button>
+                    );
+                  })}
+                </div>
+                <div className="flex flex-col gap-2 border-t border-wt-border pt-5 sm:flex-row sm:justify-between">
+                  <Button disabled={saving} size="xl" onClick={() => void completeParticipation()}>
+                    Concluir meu treino
+                  </Button>
+                  <Dialog
+                    description="Sua participação termina e suas séries continuam na sua conta. O treino do grupo segue para quem ficar."
+                    open={confirmLeave}
+                    title="Sair deste treino?"
+                    trigger={
+                      <Button disabled={saving} variant="ghost">
+                        <LogOut aria-hidden="true" className="size-4" />
+                        Sair deste treino
+                      </Button>
+                    }
+                    onOpenChange={setConfirmLeave}
+                  >
+                    <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
+                      <Button variant="secondary" onClick={() => setConfirmLeave(false)}>
+                        Continuar treinando
+                      </Button>
+                      <Button loading={saving} variant="danger" onClick={() => void leaveSession()}>
+                        Sair do treino
+                      </Button>
+                    </div>
+                  </Dialog>
+                </div>
+              </Card>
+            ) : ownParticipant?.status === "COMPLETED" ? (
+              <Card as="div" className="space-y-3 p-5" elevated>
+                <span className="grid size-12 place-items-center rounded-wt-full bg-wt-success-subtle text-wt-success-text">
+                  <CircleCheck aria-hidden="true" className="size-7" />
+                </span>
+                <h2 className="wt-text-h2">Você concluiu este treino</h2>
+                <p className="text-wt-body-sm text-wt-text-secondary-strong">
+                  Suas séries continuam registradas na sua conta. Quem ainda está treinando segue
+                  sem interrupção.
                 </p>
-              </div>
-            ) : isHost ? (
-              <div className="space-y-3">
-                <p className="wt-text-body text-wt-text-secondary">
-                  {everyoneReady
-                    ? "Todos estão prontos. Inicie a contagem sincronizada."
-                    : "O início sincronizado será liberado quando todos estiverem prontos."}
+              </Card>
+            ) : sessionStatus === "ACTIVE" && ownParticipant?.status === "LEFT" ? (
+              <Card as="div" className="space-y-2 p-5">
+                <h2 className="wt-text-h2">Você saiu deste treino</h2>
+                <p className="text-wt-body-sm text-wt-text-secondary-strong">
+                  Sua participação foi encerrada sem apagar o treino do grupo.
                 </p>
-                <Button
-                  disabled={!everyoneReady}
-                  loading={saving}
-                  onClick={() => void startSession()}
-                >
-                  Começar treino
+              </Card>
+            ) : null}
+
+            {isHost && sessionStatus === "LOBBY" ? (
+              <Card className="space-y-5 p-5">
+                <div className="space-y-1">
+                  <h2 className="wt-text-h2">Como vocês vão treinar</h2>
+                  <p className="text-wt-body-sm text-wt-text-secondary-strong">
+                    Só ajusta logística e tempo; cargas e adaptações continuam individuais.
+                  </p>
+                </div>
+                <Select
+                  id="shared-equipment-mode"
+                  label="Vocês compartilham aparelhos?"
+                  options={[
+                    { label: "Sim", value: "FULL" },
+                    { label: "Parcialmente", value: "PARTIAL" },
+                    { label: "Não", value: "NONE" },
+                  ]}
+                  value={sharedEquipmentMode}
+                  onChange={(event) =>
+                    setSharedEquipmentMode(
+                      event.target.value as GroupLobbyConfiguration["sharedEquipmentMode"],
+                    )
+                  }
+                />
+                <Select
+                  id="station-mode"
+                  label="Modo de estação"
+                  options={[
+                    { label: "Revezamento no mesmo aparelho", value: "ROTATION_SHARED_STATION" },
+                    { label: "Mesmo exercício em paralelo", value: "PARALLEL_SAME_EXERCISE" },
+                    { label: "Estações independentes", value: "INDEPENDENT_STATIONS" },
+                  ]}
+                  value={stationMode}
+                  onChange={(event) =>
+                    setStationMode(event.target.value as GroupLobbyConfiguration["stationMode"])
+                  }
+                />
+                <Select
+                  id="weight-change-mode"
+                  label="Troca de carga"
+                  options={[
+                    { label: "Rápida · ~10 s", value: "FAST" },
+                    { label: "Normal · ~20 s", value: "NORMAL" },
+                    { label: "Demorada · ~35 s", value: "SLOW" },
+                    { label: "Personalizada", value: "CUSTOM" },
+                  ]}
+                  value={weightChangeMode}
+                  onChange={(event) =>
+                    setWeightChangeMode(
+                      event.target.value as GroupLobbyConfiguration["weightChangeMode"],
+                    )
+                  }
+                />
+                {weightChangeMode === "CUSTOM" ? (
+                  <Input
+                    inputMode="numeric"
+                    label="Segundos para trocar a carga"
+                    max={120}
+                    min={1}
+                    type="number"
+                    unit="s"
+                    value={customWeightChangeSeconds}
+                    onChange={(event) => setCustomWeightChangeSeconds(event.target.value)}
+                  />
+                ) : null}
+                <p className="flex items-center gap-2 text-wt-body-sm text-wt-text-secondary-strong">
+                  <Clock3 aria-hidden="true" className="size-4" />
+                  Estimativa com essa configuração: {formatDuration(duration)}
+                </p>
+                <Button loading={saving} variant="secondary" onClick={() => void saveConfiguration()}>
+                  Salvar configuração
                 </Button>
-              </div>
-            ) : (
-              <p className="wt-text-body text-wt-text-secondary">
-                Aguarde o host iniciar quando todos estiverem prontos. Nenhum dado de saúde,
-                acessibilidade ou carga individual é exibido no lobby.
-              </p>
-            )}
-          </Card>
-        ) : null}
+              </Card>
+            ) : null}
+          </div>
 
-        {lobby?.session.status === "ACTIVE" &&
-        ownParticipant &&
-        ["ACTIVE", "PAUSED"].includes(ownParticipant.status) ? (
-          <Card className="space-y-3 p-5 sm:p-7">
-            <div>
-              <h2 className="text-xl font-semibold">Status do treino</h2>
-              <p className="wt-text-body text-wt-text-secondary">
-                Compartilhe somente seu estado operacional. Carga, repetições, RIR e dados pessoais
-                continuam privados.
-              </p>
-            </div>
-            <div className="flex flex-wrap gap-2">
-              <Button
-                disabled={saving}
-                variant="secondary"
-                onClick={() => void updateOperationalState("PERFORMING_SET")}
-              >
-                Estou executando
-              </Button>
-              <Button
-                disabled={saving}
-                variant="secondary"
-                onClick={() => void updateOperationalState("RESTING")}
-              >
-                Estou descansando
-              </Button>
-              <Button
-                disabled={saving}
-                variant="secondary"
-                onClick={() => void updateOperationalState("WAITING_TURN")}
-              >
-                Aguardando minha vez
-              </Button>
-              <Button disabled={saving} onClick={() => void completeParticipation()}>
-                Concluir meu treino
-              </Button>
-              <Button disabled={saving} variant="danger" onClick={() => void leaveSession()}>
-                Sair deste treino
-              </Button>
-            </div>
-          </Card>
-        ) : ownParticipant?.status === "COMPLETED" ? (
-          <Card className="space-y-2 p-5">
-            <h2 className="text-xl font-semibold">Você concluiu este treino</h2>
-            <p className="wt-text-body text-wt-text-secondary">
-              Suas séries continuam registradas na sua conta. Quem ainda está treinando segue sem
-              interrupção.
+          <section aria-labelledby="participants-title" className="space-y-3">
+            <SectionHeader
+              description={`${participantCount} ${participantCount === 1 ? "pessoa" : "pessoas"} nesta sala`}
+              id="participants-title"
+              title="Participantes"
+            />
+            <Card as="div" className="p-2">
+              <ul className="divide-y divide-wt-border">
+                {lobby.participants.map((participant) => {
+                  const participantStatus = getParticipantStatus(participant, sessionStatus);
+                  const StatusIcon = participantStatus.icon;
+                  const isYou = participant.uid === user?.uid;
+
+                  return (
+                    <li className="flex items-center gap-3 px-3 py-3" key={participant.uid}>
+                      <Avatar name={participant.displaySnapshot.displayName} />
+                      <div className="min-w-0 flex-1">
+                        <p className="flex items-center gap-1.5 text-wt-label font-semibold">
+                          <span className="truncate">{participant.displaySnapshot.displayName}</span>
+                          {isYou ? (
+                            <span className="shrink-0 font-normal text-wt-text-secondary-strong">
+                              (você)
+                            </span>
+                          ) : null}
+                        </p>
+                        <p className="flex items-center gap-1 text-xs text-wt-text-secondary-strong">
+                          {participant.role === "HOST" ? (
+                            <>
+                              <Crown aria-hidden="true" className="size-3.5" />
+                              Anfitrião
+                            </>
+                          ) : (
+                            "Participante"
+                          )}
+                        </p>
+                      </div>
+                      <Badge icon={<StatusIcon />} tone={participantStatus.tone}>
+                        {participantStatus.label}
+                      </Badge>
+                    </li>
+                  );
+                })}
+              </ul>
+            </Card>
+            <p className="flex items-start gap-2 wt-text-caption text-wt-text-secondary-strong">
+              <ShieldCheck aria-hidden="true" className="mt-0.5 size-4 shrink-0" />
+              Nenhum dado de saúde, acessibilidade ou carga individual é exibido para o grupo.
             </p>
-          </Card>
-        ) : lobby?.session.status === "ACTIVE" && ownParticipant?.status === "LEFT" ? (
-          <Card className="space-y-2 p-5">
-            <h2 className="text-xl font-semibold">Você saiu deste treino</h2>
-            <p className="wt-text-body text-wt-text-secondary">
-              Sua participação foi encerrada sem apagar o treino do grupo.
-            </p>
-          </Card>
-        ) : null}
-      </div>
+          </section>
+        </div>
+      )}
     </main>
   );
 }

@@ -2,9 +2,10 @@
 
 import { useEffect, useState } from "react";
 
+import { Avatar } from "@/components/ui/avatar";
+import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
-
 import { useAuthSession } from "@/features/auth/auth-session-provider";
 
 import { CopyPublicUserIdButton } from "./copy-public-user-id-button";
@@ -64,9 +65,9 @@ export function PublicProfileCard() {
 
   if (mode === "local") {
     return (
-      <Card className="space-y-3" elevated>
-        <h2 className="wt-text-title">Perfil local de desenvolvimento</h2>
-        <p className="wt-text-body text-wt-text-secondary">
+      <Card className="space-y-2 p-5" elevated>
+        <h2 className="wt-text-h2">Perfil local de desenvolvimento</h2>
+        <p className="text-wt-body-sm text-wt-text-secondary-strong">
           Você está usando o app sem o Firebase. O WillTreino ID, parceiros e dados sincronizados
           aparecem quando a autenticação Firebase for habilitada.
         </p>
@@ -75,31 +76,40 @@ export function PublicProfileCard() {
   }
 
   return (
-    <Card className="space-y-5" elevated>
-      <div className="space-y-2">
-        <h2 className="wt-text-title">Meu WillTreino ID</h2>
-        <p className="wt-text-body text-wt-text-secondary">
-          Este é o ID público que você compartilha com parceiros de treino.
-        </p>
+    <Card aria-labelledby="public-profile-title" className="space-y-5 p-5" elevated>
+      <div className="flex items-center gap-4">
+        {profile ? (
+          <Avatar name={profile.displayName} size="lg" />
+        ) : (
+          <Skeleton className="size-16 rounded-wt-full" />
+        )}
+        <div className="min-w-0 flex-1 space-y-1">
+          <h2 className="wt-text-caption font-semibold" id="public-profile-title">
+            Meu WillTreino ID
+          </h2>
+          {profile ? (
+            <>
+              <p className="truncate wt-text-h2">{profile.displayName}</p>
+              {profile.accountState === "ACTIVE" ? <Badge tone="success">Conta ativa</Badge> : null}
+            </>
+          ) : error ? null : (
+            <Skeleton className="h-6 w-40" />
+          )}
+        </div>
       </div>
       {error ? (
-        <p className="wt-text-body text-wt-danger">{error}</p>
+        <p className="rounded-wt-lg bg-wt-danger-subtle px-4 py-3 text-wt-body-sm text-wt-danger-text">
+          {error}
+        </p>
       ) : profile ? (
-        <div className="space-y-4">
-          <div className="rounded-wt-md border border-wt-border bg-wt-surface p-4">
-            <p className="wt-text-label text-wt-text-secondary">Nome público</p>
-            <p className="wt-text-body">{profile.displayName}</p>
-            <p className="wt-text-caption">
-              Conta {profile.accountState === "ACTIVE" ? "ativa" : ""}
-            </p>
-          </div>
+        <div className="space-y-2">
           <CopyPublicUserIdButton publicUserId={profile.publicUserId} />
+          <p className="wt-text-caption text-wt-text-secondary-strong">
+            É o único identificador que você precisa passar para treinar com alguém.
+          </p>
         </div>
       ) : (
-        <div className="space-y-3">
-          <Skeleton className="h-6 w-48" />
-          <Skeleton className="h-12 w-full" />
-        </div>
+        <Skeleton className="h-14 w-full rounded-wt-lg" />
       )}
     </Card>
   );
