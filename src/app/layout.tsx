@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import type { ReactNode } from "react";
 
 import { Providers } from "@/components/providers";
+import { SuppressChromeDevToolsBug } from "@/components/layout/suppress-devtools-bug";
 
 import "./globals.css";
 
@@ -31,7 +32,10 @@ export default function RootLayout({ children }: RootLayoutProps) {
   return (
     <html lang="pt-BR">
       <body>
-        <Providers>{children}</Providers>
+        <Providers>
+          <SuppressChromeDevToolsBug />
+          {children}
+        </Providers>
       </body>
     </html>
   );
