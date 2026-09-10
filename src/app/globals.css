@@ -1,0 +1,505 @@
+@import "tailwindcss";
+
+/*
+ * Fonte única dos tokens do WillTreino (light-first). Componentes usam as
+ * classes Tailwind geradas em `@theme inline` ou `var(--wt-*)`; nenhum HEX deve
+ * aparecer fora deste arquivo. `src/config/color-contrast.test.ts` lê estes
+ * blocos e reprova qualquer par de cores que saia do AA.
+ */
+:root {
+  color-scheme: light;
+
+  /* Superfícies e texto */
+  --wt-color-background: #f7f8fa;
+  --wt-color-surface: #ffffff;
+  --wt-color-surface-elevated: #f1f4f8;
+  --wt-color-border: #e4e7ec;
+  --wt-color-border-strong: #cbd2dc;
+  --wt-color-text-primary: #111827;
+  --wt-color-text-secondary: #64748b;
+  --wt-color-text-secondary-strong: #5f6f85;
+  --wt-color-text-muted: #94a3b8;
+
+  /* Ação principal (azul). O CTA usa `accent-hover` para manter texto branco em AA. */
+  --wt-color-accent: #4f7cff;
+  --wt-color-accent-hover: #3d68e8;
+  --wt-color-accent-active: #3458c7;
+  --wt-color-accent-subtle: #eaf0ff;
+  --wt-color-accent-border: #c7d5ff;
+  --wt-color-accent-foreground: #ffffff;
+  --wt-color-accent-text: #3458c7;
+  --wt-color-signal: #7c6cff;
+
+  /*
+   * Estados. O tom base é para ícones, barras e bordas (3:1); o `-text` é o tom
+   * para texto sobre superfícies claras e sobre o próprio `-subtle` (4,5:1).
+   */
+  --wt-color-success: #22c55e;
+  --wt-color-success-subtle: #ecfdf3;
+  --wt-color-success-text: #15803d;
+  --wt-color-warning: #f59e0b;
+  --wt-color-warning-subtle: #fff7e6;
+  --wt-color-warning-text: #b45309;
+  --wt-color-danger: #ef4444;
+  --wt-color-danger-strong: #dc2626;
+  --wt-color-danger-subtle: #fef2f2;
+  --wt-color-danger-text: #b91c1c;
+  --wt-color-danger-foreground: #ffffff;
+  --wt-color-info: #0ea5e9;
+  --wt-color-info-subtle: #f0f9ff;
+  --wt-color-info-text: #0369a1;
+  --wt-color-focus: #3458c7;
+
+  /* Raios: hierarquia, não 30px em tudo */
+  --wt-radius-sm: 0.5rem;
+  --wt-radius-md: 0.75rem;
+  --wt-radius-lg: 1rem;
+  --wt-radius-card: 1.25rem;
+  --wt-radius-xl: 1.5rem;
+  --wt-radius-hero: 1.75rem;
+  --wt-radius-full: 9999px;
+
+  /* Sombras discretas; nunca glow */
+  --wt-shadow-surface: 0 1px 2px rgb(15 23 42 / 0.04), 0 8px 24px rgb(15 23 42 / 0.06);
+  --wt-shadow-elevated: 0 20px 60px rgb(15 23 42 / 0.08);
+  --wt-shadow-bar: 0 -8px 24px rgb(15 23 42 / 0.06);
+
+  /* Tipografia */
+  --wt-font-family-sans:
+    Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  --wt-font-family-display:
+    Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  --wt-font-size-display: clamp(2.5rem, 7vw, 5.5rem);
+  --wt-font-size-heading: clamp(1.625rem, 3.5vw, 2.5rem);
+  --wt-font-size-h1: clamp(1.5rem, 2.6vw, 2rem);
+  --wt-font-size-h2: 1.25rem;
+  --wt-font-size-h3: 1.0625rem;
+  --wt-font-size-title: 1.25rem;
+  --wt-font-size-body: 1rem;
+  --wt-font-size-body-sm: 0.9375rem;
+  --wt-font-size-label: 0.875rem;
+  --wt-font-size-caption: 0.75rem;
+  --wt-font-size-metric: 1.75rem;
+  --wt-font-size-metric-lg: clamp(2.75rem, 12vw, 4rem);
+  --wt-line-height-tight: 1.1;
+  --wt-line-height-heading: 1.2;
+  --wt-line-height-body: 1.5;
+  --wt-line-height-relaxed: 1.65;
+  --wt-letter-spacing-label: 0.03em;
+
+  /* Movimento: 150–250 ms, só opacity/transform */
+  --wt-duration-fast: 150ms;
+  --wt-duration-base: 200ms;
+  --wt-duration-slow: 250ms;
+  --wt-ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+
+  /* Camadas */
+  --wt-z-sticky: 20;
+  --wt-z-nav: 30;
+  --wt-z-overlay: 40;
+  --wt-z-modal: 50;
+  --wt-z-toast: 60;
+
+  /* Larguras de conteúdo */
+  --wt-container-form: 36rem;
+  --wt-container-reading: 48rem;
+  --wt-container-app: 72rem;
+  --wt-container-wide: 80rem;
+
+  /* Altura útil da navegação inferior (sem a área segura) */
+  --wt-mobile-nav-height: 4.25rem;
+}
+
+@theme inline {
+  --color-wt-background: var(--wt-color-background);
+  --color-wt-surface: var(--wt-color-surface);
+  --color-wt-surface-elevated: var(--wt-color-surface-elevated);
+  --color-wt-border: var(--wt-color-border);
+  --color-wt-border-strong: var(--wt-color-border-strong);
+  --color-wt-text-primary: var(--wt-color-text-primary);
+  --color-wt-text-secondary: var(--wt-color-text-secondary);
+  --color-wt-text-secondary-strong: var(--wt-color-text-secondary-strong);
+  --color-wt-text-muted: var(--wt-color-text-muted);
+  --color-wt-accent: var(--wt-color-accent);
+  --color-wt-accent-hover: var(--wt-color-accent-hover);
+  --color-wt-accent-active: var(--wt-color-accent-active);
+  --color-wt-accent-subtle: var(--wt-color-accent-subtle);
+  --color-wt-accent-border: var(--wt-color-accent-border);
+  --color-wt-accent-foreground: var(--wt-color-accent-foreground);
+  --color-wt-accent-text: var(--wt-color-accent-text);
+  --color-wt-success: var(--wt-color-success);
+  --color-wt-success-subtle: var(--wt-color-success-subtle);
+  --color-wt-success-text: var(--wt-color-success-text);
+  --color-wt-warning: var(--wt-color-warning);
+  --color-wt-warning-subtle: var(--wt-color-warning-subtle);
+  --color-wt-warning-text: var(--wt-color-warning-text);
+  --color-wt-danger: var(--wt-color-danger);
+  --color-wt-danger-strong: var(--wt-color-danger-strong);
+  --color-wt-danger-subtle: var(--wt-color-danger-subtle);
+  --color-wt-danger-text: var(--wt-color-danger-text);
+  --color-wt-danger-foreground: var(--wt-color-danger-foreground);
+  --color-wt-info: var(--wt-color-info);
+  --color-wt-info-subtle: var(--wt-color-info-subtle);
+  --color-wt-info-text: var(--wt-color-info-text);
+  --color-wt-focus: var(--wt-color-focus);
+  --color-wt-signal: var(--wt-color-signal);
+  --font-wt-sans: var(--wt-font-family-sans);
+  --radius-wt-sm: var(--wt-radius-sm);
+  --radius-wt-md: var(--wt-radius-md);
+  --radius-wt-lg: var(--wt-radius-lg);
+  --radius-wt-card: var(--wt-radius-card);
+  --radius-wt-xl: var(--wt-radius-xl);
+  --radius-wt-hero: var(--wt-radius-hero);
+  --radius-wt-full: var(--wt-radius-full);
+  --shadow-wt-surface: var(--wt-shadow-surface);
+  --shadow-wt-elevated: var(--wt-shadow-elevated);
+  --shadow-wt-bar: var(--wt-shadow-bar);
+  --text-wt-body: var(--wt-font-size-body);
+  --text-wt-body-sm: var(--wt-font-size-body-sm);
+  --text-wt-label: var(--wt-font-size-label);
+  --text-wt-caption: var(--wt-font-size-caption);
+  --ease-wt-out: var(--wt-ease-out);
+}
+
+[data-theme="dark"] {
+  color-scheme: dark;
+  --wt-color-background: #111827;
+  --wt-color-surface: #182231;
+  --wt-color-surface-elevated: #223044;
+  --wt-color-border: #3c4a5e;
+  --wt-color-border-strong: #52627a;
+  --wt-color-text-primary: #f8fafc;
+  --wt-color-text-secondary: #cbd5e1;
+  --wt-color-text-secondary-strong: #e2e8f0;
+  --wt-color-text-muted: #94a3b8;
+  --wt-color-accent-subtle: #1d315f;
+  --wt-color-accent-border: #527cff;
+  --wt-color-accent-text: #9db0ff;
+  --wt-color-success-subtle: #123725;
+  --wt-color-success-text: #4ade80;
+  --wt-color-warning-subtle: #49370f;
+  --wt-color-warning-text: #fbbf24;
+  --wt-color-danger-subtle: #4d1e25;
+  --wt-color-danger-text: #fca5a5;
+  --wt-color-info-subtle: #103a53;
+  --wt-color-info-text: #7dd3fc;
+  --wt-color-focus: #9db0ff;
+}
+
+[data-contrast="high"] {
+  --wt-color-background: #ffffff;
+  --wt-color-surface: #ffffff;
+  --wt-color-surface-elevated: #f1f4f8;
+  --wt-color-border: #111827;
+  --wt-color-border-strong: #111827;
+  --wt-color-text-primary: #000000;
+  --wt-color-text-secondary: #111827;
+  --wt-color-text-muted: #334155;
+  --wt-color-focus: #0000ee;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  min-height: 100%;
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+}
+
+body {
+  min-height: 100dvh;
+  margin: 0;
+  background: var(--wt-color-background);
+  color: var(--wt-color-text-primary);
+  font-family: var(--wt-font-family-sans);
+  font-size: var(--wt-font-size-body);
+  line-height: var(--wt-line-height-body);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* Botões e links de toque não disparam zoom por duplo toque no mobile. */
+a,
+button,
+input,
+label,
+select,
+summary,
+textarea {
+  touch-action: manipulation;
+}
+
+.wt-text-display,
+.wt-text-heading,
+.wt-text-h1,
+.wt-text-h2,
+.wt-text-h3,
+.wt-text-title,
+.wt-text-body,
+.wt-text-label,
+.wt-text-caption,
+.wt-text-metric {
+  margin: 0;
+}
+
+.wt-text-display {
+  font-family: var(--wt-font-family-display);
+  font-size: var(--wt-font-size-display);
+  font-weight: 800;
+  letter-spacing: -0.045em;
+  line-height: var(--wt-line-height-tight);
+}
+
+.wt-text-heading {
+  font-family: var(--wt-font-family-display);
+  font-size: var(--wt-font-size-heading);
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  line-height: var(--wt-line-height-heading);
+}
+
+/* Título de página (um por tela). */
+.wt-text-h1,
+.wt-section-title {
+  font-family: var(--wt-font-family-display);
+  font-size: var(--wt-font-size-h1);
+  font-weight: 750;
+  letter-spacing: -0.025em;
+  line-height: 1.15;
+}
+
+/* Título de seção dentro da página. */
+.wt-text-h2 {
+  font-size: var(--wt-font-size-h2);
+  font-weight: 700;
+  letter-spacing: -0.015em;
+  line-height: var(--wt-line-height-heading);
+}
+
+/* Título de card/lista. */
+.wt-text-h3 {
+  font-size: var(--wt-font-size-h3);
+  font-weight: 650;
+  letter-spacing: -0.01em;
+  line-height: 1.3;
+}
+
+.wt-text-title {
+  font-size: var(--wt-font-size-title);
+  font-weight: 650;
+  line-height: var(--wt-line-height-heading);
+}
+
+.wt-text-body {
+  font-size: var(--wt-font-size-body);
+  line-height: var(--wt-line-height-relaxed);
+}
+
+.wt-text-label {
+  font-size: var(--wt-font-size-label);
+  font-weight: 600;
+  letter-spacing: 0.005em;
+  line-height: var(--wt-line-height-body);
+}
+
+.wt-text-caption {
+  color: var(--wt-color-text-secondary);
+  font-size: var(--wt-font-size-caption);
+  line-height: var(--wt-line-height-body);
+}
+
+/*
+ * Números de treino (24 kg, 10 reps, 01:27). Peso e tamanho dão o destaque — não
+ * a cor — e os algarismos tabulares impedem o número de "pular" enquanto conta.
+ */
+.wt-text-metric {
+  font-size: var(--wt-font-size-metric);
+  font-variant-numeric: tabular-nums;
+  font-weight: 750;
+  letter-spacing: -0.02em;
+  line-height: 1.05;
+}
+
+.wt-tabular {
+  font-variant-numeric: tabular-nums;
+}
+
+/*
+ * Página autenticada. O espaço da navegação inferior é reservado pela casca
+ * (`AppShell`), então aqui só entra o respiro normal do conteúdo.
+ */
+.wt-page {
+  isolation: isolate;
+  margin-inline: auto;
+  width: min(100%, var(--wt-container-app));
+  padding: clamp(1rem, 3vw, 2.5rem) clamp(1rem, 4vw, 2rem) clamp(1.5rem, 4vw, 3rem);
+}
+
+/* Legado: a grade decorativa de fundo saiu do sistema; a classe fica inerte. */
+.wt-page-grid {
+  background-image: none;
+}
+
+/* Rótulo curto acima de um título. Tom escuro de marca para passar no AA. */
+.wt-kicker {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: var(--wt-color-accent-text);
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  line-height: 1.2;
+  text-transform: uppercase;
+}
+
+.wt-surface-glass {
+  border: 1px solid var(--wt-color-border);
+  background: var(--wt-color-surface);
+  box-shadow: var(--wt-shadow-elevated);
+}
+
+.wt-stat {
+  position: relative;
+  border-radius: var(--wt-radius-md);
+  background: var(--wt-color-surface-elevated);
+  padding: 1rem;
+}
+
+.wt-gradient-text {
+  background: linear-gradient(90deg, var(--wt-color-accent), var(--wt-color-signal));
+  background-clip: text;
+  -webkit-background-clip: text;
+  color: transparent;
+}
+
+.wt-brand-gradient {
+  background: linear-gradient(135deg, var(--wt-color-accent), var(--wt-color-signal));
+}
+
+::selection {
+  background: var(--wt-color-accent-subtle);
+  color: var(--wt-color-text-primary);
+}
+
+:focus-visible {
+  outline: 3px solid var(--wt-color-focus);
+  outline-offset: 3px;
+}
+
+/* Disclosure nativo sem o triângulo padrão; o ícone é desenhado pelo componente. */
+summary {
+  cursor: pointer;
+  list-style: none;
+}
+
+summary::-webkit-details-marker {
+  display: none;
+}
+
+.wt-skeleton {
+  animation: wt-skeleton-pulse 1.5s ease-in-out infinite;
+}
+
+@keyframes wt-skeleton-pulse {
+  0%,
+  100% {
+    opacity: 0.55;
+  }
+
+  50% {
+    opacity: 0.9;
+  }
+}
+
+/*
+ * Entrada de uma etapa do onboarding: sobe alguns pixels e aparece. O
+ * deslocamento é pequeno de propósito — dá a sensação de avanço sem empurrar o
+ * conteúdo para fora do lugar em que a pessoa já estava olhando.
+ */
+.wt-step-in {
+  animation: wt-step-in var(--wt-duration-slow) var(--wt-ease-out) both;
+}
+
+@keyframes wt-step-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Confirmação curta (série concluída): aparece, fica e some sem deslocar layout. */
+.wt-pop-in {
+  animation: wt-pop-in var(--wt-duration-base) var(--wt-ease-out) both;
+}
+
+@keyframes wt-pop-in {
+  from {
+    opacity: 0;
+    transform: scale(0.96);
+  }
+
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+/* Bottom sheet no mobile, diálogo centralizado a partir de `sm`. */
+.wt-sheet-in {
+  animation: wt-sheet-in var(--wt-duration-slow) var(--wt-ease-out) both;
+}
+
+.wt-fade-in {
+  animation: wt-fade-in var(--wt-duration-base) ease-out both;
+}
+
+@keyframes wt-sheet-in {
+  from {
+    opacity: 0;
+    transform: translateY(24px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes wt-fade-in {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
+/*
+ * Movimento reduzido: nenhuma animação ou transição é essencial para entender
+ * ou operar o app, então elas são desligadas sem perda de função. O que muda de
+ * estado continua mudando — apenas sem animar.
+ */
+@media (prefers-reduced-motion: reduce) {
+  .wt-skeleton {
+    animation: none;
+  }
+
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    scroll-behavior: auto !important;
+    transition-duration: 0.01ms !important;
+  }
+}

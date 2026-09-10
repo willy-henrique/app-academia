@@ -1,0 +1,11 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "willtreino-dev",
+      "runtimeExecutable": "wsl.exe",
+      "runtimeArgs": ["-e", "bash", "/mnt/c/willydev/appACADEMIA/run.sh", "npm", "run", "dev"],
+      "port": 3000
+    }
+  ]
+}

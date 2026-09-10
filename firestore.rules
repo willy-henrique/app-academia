@@ -1,0 +1,680 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function signedIn() {
+      return request.auth != null;
+    }
+
+    function isOwner(uid) {
+      return signedIn() && request.auth.uid == uid;
+    }
+
+    function isStringOrNull(value) {
+      return value == null || value is string;
+    }
+
+    function isPublicProfileUpdate(uid) {
+      return isOwner(uid)
+        && request.resource.data.keys().hasOnly([
+          "avatar",
+          "badgesPublic",
+          "createdAt",
+          "displayName",
+          "publicUserId",
+          "updatedAt",
+          "username",
+        ])
+        && request.resource.data.publicUserId == resource.data.publicUserId
+        && request.resource.data.createdAt == resource.data.createdAt
+        && request.resource.data.displayName is string
+        && request.resource.data.displayName.size() > 0
+        && isStringOrNull(request.resource.data.avatar)
+        && isStringOrNull(request.resource.data.username)
+        && request.resource.data.badgesPublic is list;
+    }
+
+    function isPrivateLikeDocumentWrite(uid) {
+      return isOwner(uid)
+        && request.resource.data.keys().hasOnly([
+          "activeWorkoutPlanId",
+          "activeWorkoutSessionId",
+          "birthDate",
+          "createdAt",
+          "onboarding",
+          "locale",
+          "onboardingVersion",
+          "preferences",
+          "timezone",
+          "updatedAt",
+        ]);
+    }
+
+    function isWorkoutSessionOwner(sessionId) {
+      return signedIn()
+        && get(/databases/$(database)/documents/workoutSessions/$(sessionId)).data.ownerUid
+          == request.auth.uid;
+    }
+
+    function isMeasurementWrite(uid) {
+      return isOwner(uid)
+        && request.resource.data.keys().hasOnly([
+          "armCm",
+          "bodyFatPercent",
+          "chestCm",
+          "createdAt",
+          "heightCm",
+          "hipCm",
+          "id",
+          "notes",
+          "ownerUid",
+          "takenAt",
+          "thighCm",
+          "updatedAt",
+          "waistCm",
+          "weightKg",
+        ])
+        && request.resource.data.ownerUid == uid
+        && request.resource.data.takenAt is string
+        && (request.resource.data.weightKg == null || (
+          request.resource.data.weightKg is number
+          && request.resource.data.weightKg > 0
+          && request.resource.data.weightKg <= 400
+        ))
+        && (request.resource.data.heightCm == null || (
+          request.resource.data.heightCm is number
+          && request.resource.data.heightCm > 0
+          && request.resource.data.heightCm <= 260
+        ));
+    }
+
+    function isCardioSessionOwner(cardioSessionId) {
+      return signedIn()
+        && get(/databases/$(database)/documents/cardioSessions/$(cardioSessionId)).data.ownerUid
+          == request.auth.uid;
+    }
+
+    function isCardioSessionWrite(cardioSessionId) {
+      return signedIn()
+        && request.resource.data.keys().hasOnly([
+          "completedAt",
+          "createdAt",
+          "distanceMeters",
+          "durationSeconds",
+          "id",
+          "ownerUid",
+          "prescription",
+          "rescheduledFor",
+          "skipReason",
+          "skippedAt",
+          "source",
+          "startedAt",
+          "status",
+          "updatedAt",
+          "workoutSessionId",
+        ])
+        && request.resource.data.ownerUid == request.auth.uid
+        && request.resource.data.id == cardioSessionId
+        && request.resource.data.status in [
+          "PLANNED",
+          "ACTIVE",
+          "COMPLETED",
+          "SKIPPED",
+          "RESCHEDULED",
+        ]
+        && request.resource.data.durationSeconds is int
+        && request.resource.data.durationSeconds >= 0
+        && request.resource.data.source in ["WORKOUT", "STANDALONE"]
+        && request.resource.data.prescription.requirement in [
+          "OPTIONAL",
+          "RECOMMENDED",
+          "PROGRAM_REQUIRED",
+        ]
+        && (
+          request.resource.data.status != "SKIPPED"
+          || (request.resource.data.skipReason is string
+            && request.resource.data.skipReason.size() > 0)
+        )
+        && (resource == null || resource.data.ownerUid == request.auth.uid);
+    }
+
+    function isFoodLogEntryPayload(uid, entryId) {
+      return isOwner(uid)
+        && request.resource.data.keys().hasOnly([
+          "consumedAt",
+          "createdAt",
+          "food",
+          "id",
+          "meal",
+          "notes",
+          "nutrition",
+          "ownerUid",
+          "portionGrams",
+          "updatedAt",
+        ])
+        && request.resource.data.keys().hasAll([
+          "consumedAt",
+          "createdAt",
+          "food",
+          "id",
+          "meal",
+          "notes",
+          "nutrition",
+          "ownerUid",
+          "portionGrams",
+          "updatedAt",
+        ])
+        && request.resource.data.id == entryId
+        && request.resource.data.ownerUid == uid
+        && request.resource.data.consumedAt is string
+        && request.resource.data.consumedAt.size() > 0
+        && request.resource.data.consumedAt.size() <= 40
+        && request.resource.data.meal in ["BREAKFAST", "LUNCH", "DINNER", "SNACK", "OTHER"]
+        && isStringOrNull(request.resource.data.notes)
+        && (request.resource.data.notes == null || request.resource.data.notes.size() <= 500)
+        && request.resource.data.portionGrams is number
+        && request.resource.data.portionGrams > 0
+        && request.resource.data.portionGrams <= 100000
+        && request.resource.data.food.keys().hasOnly([
+          "confidence",
+          "foodId",
+          "foodName",
+          "servingLabel",
+          "sourceProvider",
+        ])
+        && request.resource.data.food.keys().hasAll([
+          "confidence",
+          "foodId",
+          "foodName",
+          "servingLabel",
+          "sourceProvider",
+        ])
+        && request.resource.data.food.foodId is string
+        && request.resource.data.food.foodId.size() > 0
+        && request.resource.data.food.foodName is string
+        && request.resource.data.food.foodName.size() > 0
+        && request.resource.data.food.servingLabel is string
+        && request.resource.data.food.servingLabel.size() > 0
+        && request.resource.data.food.sourceProvider in [
+          "INTERNAL",
+          "OPEN_FOOD_FACTS",
+          "USDA",
+          "BRAZILIAN_CURATED",
+        ]
+        && request.resource.data.food.confidence in ["VERIFIED", "ESTIMATED", "UNVERIFIED"]
+        && request.resource.data.nutrition.keys().hasOnly([
+          "carbohydratesGrams",
+          "energyKcal",
+          "fatGrams",
+          "fiberGrams",
+          "proteinGrams",
+          "sodiumMilligrams",
+        ])
+        && request.resource.data.nutrition.keys().hasAll([
+          "carbohydratesGrams",
+          "energyKcal",
+          "fatGrams",
+          "fiberGrams",
+          "proteinGrams",
+          "sodiumMilligrams",
+        ])
+        && request.resource.data.nutrition.energyKcal is number
+        && request.resource.data.nutrition.energyKcal >= 0
+        && request.resource.data.nutrition.energyKcal <= 1000
+        && request.resource.data.nutrition.carbohydratesGrams is number
+        && request.resource.data.nutrition.carbohydratesGrams >= 0
+        && request.resource.data.nutrition.carbohydratesGrams <= 100
+        && request.resource.data.nutrition.proteinGrams is number
+        && request.resource.data.nutrition.proteinGrams >= 0
+        && request.resource.data.nutrition.proteinGrams <= 100
+        && request.resource.data.nutrition.fatGrams is number
+        && request.resource.data.nutrition.fatGrams >= 0
+        && request.resource.data.nutrition.fatGrams <= 100
+        && (request.resource.data.nutrition.fiberGrams == null || (
+          request.resource.data.nutrition.fiberGrams is number
+          && request.resource.data.nutrition.fiberGrams >= 0
+          && request.resource.data.nutrition.fiberGrams <= 100
+        ))
+        && (request.resource.data.nutrition.sodiumMilligrams == null || (
+          request.resource.data.nutrition.sodiumMilligrams is number
+          && request.resource.data.nutrition.sodiumMilligrams >= 0
+          && request.resource.data.nutrition.sodiumMilligrams <= 20000
+        ));
+    }
+
+    function isFoodLogEntryCreate(uid, entryId) {
+      return isFoodLogEntryPayload(uid, entryId)
+        && request.resource.data.createdAt == request.time
+        && request.resource.data.updatedAt == request.time;
+    }
+
+    function isFoodLogEntryUpdate(uid, entryId) {
+      return isFoodLogEntryPayload(uid, entryId)
+        && resource.data.ownerUid == uid
+        && resource.data.id == entryId
+        && request.resource.data.createdAt == resource.data.createdAt
+        && request.resource.data.updatedAt == request.time;
+    }
+
+    function isWorkoutSessionCreate() {
+      return signedIn()
+        && request.resource.data.keys().hasOnly([
+          "completedAt",
+          "createdAt",
+          "currentExerciseIndex",
+          "currentSetIndex",
+          "currentWorkoutExerciseId",
+          "currentWorkoutExerciseName",
+          "exerciseQueue",
+          "id",
+          "lastSetCompletedAt",
+          "optionalCardioCompletedAt",
+          "optionalCardioSkippedAt",
+          "optionalCardioStatus",
+          "ownerUid",
+          "planId",
+          "planVersionId",
+          "progress",
+          "recoveryFeedback",
+          "restExpectedEndAt",
+          "restStartedAt",
+          "restTargetSeconds",
+          "startedAt",
+          "status",
+          "updatedAt",
+        ])
+        && request.resource.data.ownerUid == request.auth.uid
+        && request.resource.data.status in ["ACTIVE", "CANCELLED", "COMPLETED", "PLANNED"];
+    }
+
+    function isWorkoutSessionUpdate(sessionId) {
+      return isWorkoutSessionOwner(sessionId)
+        && request.resource.data.keys().hasOnly([
+          "completedAt",
+          "createdAt",
+          "currentExerciseIndex",
+          "currentSetIndex",
+          "currentWorkoutExerciseId",
+          "currentWorkoutExerciseName",
+          "exerciseQueue",
+          "id",
+          "lastSetCompletedAt",
+          "optionalCardioCompletedAt",
+          "optionalCardioSkippedAt",
+          "optionalCardioStatus",
+          "ownerUid",
+          "planId",
+          "planVersionId",
+          "progress",
+          "recoveryFeedback",
+          "restExpectedEndAt",
+          "restStartedAt",
+          "restTargetSeconds",
+          "startedAt",
+          "status",
+          "updatedAt",
+        ])
+        && request.resource.data.ownerUid == resource.data.ownerUid
+        && request.resource.data.createdAt == resource.data.createdAt;
+    }
+
+    function isGroupSessionHost(sessionId) {
+      return signedIn()
+        && get(/databases/$(database)/documents/groupSessions/$(sessionId)).data.hostUid
+          == request.auth.uid;
+    }
+
+    function isGroupSessionParticipant(sessionId) {
+      return signedIn()
+        && (
+          isGroupSessionHost(sessionId)
+          || exists(
+            /databases/$(database)/documents/groupSessions/$(sessionId)/participants/$(request.auth.uid)
+          )
+        );
+    }
+
+    function isGroupSessionCreate() {
+      return false;
+    }
+
+    function isGroupSessionHostUpdate(sessionId) {
+      return isGroupSessionHost(sessionId)
+        && request.resource.data.keys().hasOnly([
+          "createdAt",
+          "hostUid",
+          "sharedEquipmentMode",
+          "stationMode",
+          "status",
+          "updatedAt",
+          "weightChangeMode",
+          "weightChangeSeconds",
+          "workoutPlanId",
+          "workoutPlanVersionId",
+        ])
+        && request.resource.data.hostUid == resource.data.hostUid
+        && request.resource.data.createdAt == resource.data.createdAt
+        && request.resource.data.status == "LOBBY"
+        && resource.data.status == "LOBBY"
+        && request.resource.data.workoutPlanId == resource.data.workoutPlanId
+        && request.resource.data.workoutPlanVersionId == resource.data.workoutPlanVersionId
+        && request.resource.data.sharedEquipmentMode in ["FULL", "PARTIAL", "NONE"]
+        && request.resource.data.stationMode in [
+          "ROTATION_SHARED_STATION",
+          "PARALLEL_SAME_EXERCISE",
+          "INDEPENDENT_STATIONS",
+        ]
+        && request.resource.data.weightChangeMode in ["FAST", "NORMAL", "SLOW", "CUSTOM"]
+        && (
+          (
+            request.resource.data.weightChangeMode == "CUSTOM"
+            && request.resource.data.weightChangeSeconds is int
+            && request.resource.data.weightChangeSeconds >= 1
+            && request.resource.data.weightChangeSeconds <= 120
+          )
+          || (
+            request.resource.data.weightChangeMode != "CUSTOM"
+            && request.resource.data.weightChangeSeconds == null
+          )
+        );
+    }
+
+    function isParticipantWrite(sessionId, uid) {
+      return isGroupSessionParticipant(sessionId)
+        && request.auth.uid == uid
+        && request.resource.data.keys().hasOnly([
+          "completedAt",
+          "displaySnapshot",
+          "joinedAt",
+          "leftAt",
+          "operationalState",
+          "operationalStateUpdatedAt",
+          "readyAt",
+          "role",
+          "status",
+          "uid",
+        ])
+        && request.resource.data.uid == uid
+        && request.resource.data.uid == resource.data.uid
+        && request.resource.data.role == resource.data.role
+        && request.resource.data.joinedAt == resource.data.joinedAt
+        && request.resource.data.leftAt == resource.data.leftAt
+        && request.resource.data.completedAt == resource.data.completedAt
+        && get(/databases/$(database)/documents/groupSessions/$(sessionId)).data.status == "LOBBY"
+        && request.resource.data.status in ["INVITED", "READY"]
+        && (
+          (request.resource.data.status == "READY" && request.resource.data.readyAt != null)
+          || (request.resource.data.status == "INVITED" && request.resource.data.readyAt == null)
+        )
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(["readyAt", "status"]);
+    }
+
+    function isParticipantOperationalUpdate(sessionId, uid) {
+      return isGroupSessionParticipant(sessionId)
+        && request.auth.uid == uid
+        && get(/databases/$(database)/documents/groupSessions/$(sessionId)).data.status == "ACTIVE"
+        && resource.data.status != "LEFT"
+        && resource.data.status != "COMPLETED"
+        && request.resource.data.keys().hasOnly([
+          "completedAt",
+          "displaySnapshot",
+          "joinedAt",
+          "leftAt",
+          "operationalState",
+          "operationalStateUpdatedAt",
+          "readyAt",
+          "role",
+          "status",
+          "uid",
+        ])
+        && request.resource.data.uid == uid
+        && request.resource.data.status == resource.data.status
+        && request.resource.data.operationalState in [
+          "WAITING_TURN",
+          "PERFORMING_SET",
+          "RESTING",
+          "PAUSED",
+        ]
+        && request.resource.data.operationalStateUpdatedAt == request.time
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly([
+          "operationalState",
+          "operationalStateUpdatedAt",
+        ]);
+    }
+
+    function isParticipantSetCreate(sessionId, uid, setId) {
+      return isGroupSessionParticipant(sessionId)
+        && request.auth.uid == uid
+        && !(
+          get(/databases/$(database)/documents/groupSessions/$(sessionId)/participants/$(uid)).data
+            .status in ["LEFT", "COMPLETED"]
+        )
+        && get(/databases/$(database)/documents/groupSessions/$(sessionId)).data.status in [
+          "LOBBY",
+          "COUNTDOWN",
+          "ACTIVE",
+        ]
+        && request.resource.data.keys().hasOnly([
+          "completedAt",
+          "createdAt",
+          "eventId",
+          "exerciseId",
+          "feedback",
+          "groupSessionId",
+          "id",
+          "loadKg",
+          "notes",
+          "reps",
+          "rir",
+          "setIndex",
+          "uid",
+          "updatedAt",
+        ])
+        && request.resource.data.uid == uid
+        && request.resource.data.id == setId
+        && request.resource.data.eventId == setId
+        && request.resource.data.groupSessionId == sessionId
+        && request.resource.data.completedAt is string
+        && request.resource.data.exerciseId is string
+        && request.resource.data.exerciseId.size() > 0
+        && request.resource.data.loadKg is number
+        && request.resource.data.loadKg >= 0
+        && request.resource.data.reps is int
+        && request.resource.data.reps > 0
+        && request.resource.data.setIndex is int
+        && request.resource.data.setIndex > 0
+        && (request.resource.data.rir == null || (
+          request.resource.data.rir is int
+          && request.resource.data.rir >= 0
+          && request.resource.data.rir <= 10
+        ))
+        && isStringOrNull(request.resource.data.feedback)
+        && isStringOrNull(request.resource.data.notes)
+        && request.resource.data.createdAt == request.time
+        && request.resource.data.updatedAt == request.time;
+    }
+
+    match /publicProfiles/{uid} {
+      allow get: if signedIn();
+      allow create, delete: if false;
+      allow update: if isPublicProfileUpdate(uid);
+    }
+
+    match /privateProfiles/{uid} {
+      allow get: if isOwner(uid);
+      allow create, update: if isPrivateLikeDocumentWrite(uid);
+      allow delete: if isOwner(uid);
+    }
+
+    match /fitnessProfiles/{uid} {
+      allow get: if isOwner(uid);
+      allow create, update: if isPrivateLikeDocumentWrite(uid);
+      allow delete: if isOwner(uid);
+    }
+
+    match /healthProfiles/{uid} {
+      allow get: if isOwner(uid);
+      allow create, update: if isPrivateLikeDocumentWrite(uid);
+      allow delete: if isOwner(uid);
+    }
+
+    match /accessibilityProfiles/{uid} {
+      allow get: if isOwner(uid);
+      allow create, update: if isPrivateLikeDocumentWrite(uid);
+      allow delete: if isOwner(uid);
+    }
+
+    match /nutritionProfiles/{uid} {
+      allow get: if isOwner(uid);
+      allow create, update: if isPrivateLikeDocumentWrite(uid);
+      allow delete: if isOwner(uid);
+    }
+
+    match /userSettings/{uid} {
+      allow get: if isOwner(uid);
+      allow create, update: if isPrivateLikeDocumentWrite(uid);
+      allow delete: if isOwner(uid);
+    }
+
+    match /workoutSessions/{sessionId} {
+      allow get: if isWorkoutSessionOwner(sessionId);
+      allow create: if isWorkoutSessionCreate();
+      allow update: if isWorkoutSessionUpdate(sessionId);
+      allow delete: if isWorkoutSessionOwner(sessionId);
+    }
+
+    match /workoutSessions/{sessionId}/sets/{setId} {
+      allow get: if isWorkoutSessionOwner(sessionId);
+      allow create, update: if isWorkoutSessionOwner(sessionId)
+        && request.resource.data.keys().hasOnly([
+          "completedAt",
+          "createdAt",
+          "exerciseId",
+          "feedback",
+          "loadKg",
+          "notes",
+          "reps",
+          "rir",
+          "sessionId",
+          "setIndex",
+          "uid",
+          "updatedAt",
+        ])
+        && request.resource.data.uid == request.auth.uid
+        && request.resource.data.sessionId == sessionId;
+      allow delete: if isWorkoutSessionOwner(sessionId);
+    }
+
+    // Medidas corporais são dado de saúde: owner-only, sem exceção de parceiro.
+    match /measurements/{uid}/items/{measurementId} {
+      allow get, list: if isOwner(uid);
+      allow create, update: if isMeasurementWrite(uid)
+        && request.resource.data.id == measurementId;
+      allow delete: if isOwner(uid);
+    }
+
+    match /measurements/{uid}/{document=**} {
+      allow read, write: if false;
+    }
+
+    match /cardioSessions/{cardioSessionId} {
+      allow get, list: if isCardioSessionOwner(cardioSessionId);
+      allow create, update: if isCardioSessionWrite(cardioSessionId);
+      allow delete: if isCardioSessionOwner(cardioSessionId);
+    }
+
+    // Diário alimentar é dado privado: inclusive parceiro de treino não lê nem escreve.
+    match /foodLogs/{uid}/entries/{entryId} {
+      allow get, list: if isOwner(uid);
+      allow create: if isFoodLogEntryCreate(uid, entryId);
+      allow update: if isFoodLogEntryUpdate(uid, entryId);
+      allow delete: if isOwner(uid);
+    }
+
+    match /foodLogs/{uid}/{document=**} {
+      allow read, write: if false;
+    }
+
+    match /groupSessions/{sessionId} {
+      allow get: if isGroupSessionParticipant(sessionId);
+      allow create: if false;
+      allow update: if isGroupSessionHostUpdate(sessionId);
+      allow delete: if false;
+    }
+
+    match /groupSessions/{sessionId}/participants/{uid} {
+      allow get, list: if isGroupSessionParticipant(sessionId);
+      allow create, delete: if false;
+      allow update: if isParticipantWrite(sessionId, uid)
+        || isParticipantOperationalUpdate(sessionId, uid);
+    }
+
+    match /groupSessions/{sessionId}/participants/{uid}/sets/{setId} {
+      // Performance is private by default. Future sharing levels must use a
+      // dedicated, minimal operational projection rather than this event log.
+      allow get: if signedIn() && request.auth.uid == uid;
+      allow create: if isParticipantSetCreate(sessionId, uid, setId);
+      allow update, delete: if false;
+    }
+
+    match /trainingInvites/{inviteId} {
+      allow read: if signedIn()
+        && (
+          resource.data.senderUid == request.auth.uid
+          || resource.data.receiverUid == request.auth.uid
+        );
+      allow create, update, delete: if false;
+    }
+
+    match /blockedUsers/{ownerUid} {
+      allow read, write: if false;
+    }
+
+    match /blockedUsers/{ownerUid}/blocked/{blockedUid} {
+      allow read: if isOwner(ownerUid);
+      allow create: if isOwner(ownerUid)
+        && ownerUid != blockedUid
+        && request.resource.data.keys().hasOnly(["blockedUid", "createdAt"])
+        && request.resource.data.blockedUid == blockedUid;
+      allow delete: if isOwner(ownerUid);
+      allow update: if false;
+    }
+
+    match /notifications/{uid} {
+      allow read, write: if false;
+    }
+
+    match /notifications/{uid}/items/{notificationId} {
+      allow read: if isOwner(uid);
+      allow update: if isOwner(uid)
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly([
+          "readAt",
+          "updatedAt",
+        ]);
+      allow create, delete: if false;
+    }
+
+    match /publicUserIdIndex/{normalizedId} {
+      allow read, write: if false;
+    }
+
+    // Projeção semanal: o dono lê a própria semana; só o servidor escreve.
+    match /weeklyStats/{uid}/weeks/{weekKey} {
+      allow get, list: if isOwner(uid);
+      allow write: if false;
+    }
+
+    match /weeklyStats/{uid}/{document=**} {
+      allow read, write: if false;
+    }
+
+    // Ledger de idempotência: server-only, invisível para qualquer cliente.
+    match /processedEvents/{eventId} {
+      allow read, write: if false;
+    }
+
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}
