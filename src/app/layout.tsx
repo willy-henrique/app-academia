@@ -8,12 +8,18 @@ import "./globals.css";
 export const metadata: Metadata = {
   applicationName: "WillTreino",
   description: "Planeje e execute treinos solo ou acompanhados, com privacidade por padrão.",
+  icons: {
+    icon: [
+      { url: "/favicon.ico" },
+      { url: "/favicon.svg", type: "image/svg+xml" },
+    ],
+    apple: "/icons/icon.svg",
+  },
   title: "WillTreino",
 };
 
 export const viewport: Viewport = {
-  // Espelha --wt-color-background: a barra do navegador acompanha o tema claro.
-  themeColor: "#f7f8fa",
+  themeColor: "#101418",
   width: "device-width",
   initialScale: 1,
   viewportFit: "cover",

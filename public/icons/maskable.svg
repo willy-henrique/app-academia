@@ -1,10 +1,16 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="WillTreino">
-  <rect width="512" height="512" fill="#101418" />
-  <g fill="#4ade80">
-    <rect x="128" y="236" width="48" height="40" rx="12" />
-    <rect x="336" y="236" width="48" height="40" rx="12" />
-    <rect x="184" y="212" width="48" height="88" rx="16" />
-    <rect x="280" y="212" width="48" height="88" rx="16" />
-    <rect x="232" y="244" width="48" height="24" rx="10" />
+  <defs>
+    <linearGradient id="wt-mask-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#4F7CFF" />
+      <stop offset="100%" stop-color="#7C6CFF" />
+    </linearGradient>
+  </defs>
+  <rect width="512" height="512" fill="url(#wt-mask-grad)" />
+  <g fill="#ffffff">
+    <rect x="136" y="238" width="44" height="44" rx="12" />
+    <rect x="332" y="238" width="44" height="44" rx="12" />
+    <rect x="188" y="212" width="44" height="96" rx="16" />
+    <rect x="280" y="212" width="44" height="96" rx="16" />
+    <rect x="232" y="246" width="48" height="26" rx="10" />
   </g>
 </svg>
