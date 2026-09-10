@@ -32,8 +32,8 @@ export function LoginForm({ login = loginWithEmail, onSuccess }: LoginFormProps)
     try {
       await login(input);
       onSuccess?.();
-    } catch {
-      setSubmitMessage(authCopy.genericLoginFailure);
+    } catch (error) {
+      setSubmitMessage(error instanceof Error ? error.message : authCopy.genericLoginFailure);
     }
   });
 
