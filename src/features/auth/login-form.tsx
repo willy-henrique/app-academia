@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useState } from "react";
@@ -9,7 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 
 import { authCopy } from "./auth-copy";
-import { loginSchema, loginWithEmail, type LoginInput } from "./login";
+import { LoginError, loginSchema, loginWithEmail, type LoginInput } from "./login";
 
 type LoginFormProps = {
   login?: (input: LoginInput) => Promise<void>;
@@ -33,7 +33,7 @@ export function LoginForm({ login = loginWithEmail, onSuccess }: LoginFormProps)
       await login(input);
       onSuccess?.();
     } catch (error) {
-      setSubmitMessage(error instanceof Error ? error.message : authCopy.genericLoginFailure);
+      setSubmitMessage(error instanceof LoginError ? error.message : authCopy.genericLoginFailure);
     }
   });
 

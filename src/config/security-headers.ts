@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Cabeçalhos de segurança da aplicação.
  *
  * A CSP é escrita para o que o app realmente usa: Firebase Auth, Firestore,
@@ -51,11 +51,11 @@ export function buildContentSecurityPolicy(isProduction: boolean): string {
     "default-src 'self'",
     `script-src ${scriptSrc.join(" ")}`,
     "style-src 'self' 'unsafe-inline'",
-    "img-src 'self' data: blob: https://firebasestorage.googleapis.com https://*.googleusercontent.com",
-    "media-src 'self' https://firebasestorage.googleapis.com",
+    "img-src 'self' data: blob: https://firebasestorage.googleapis.com https://*.googleusercontent.com https://i.ytimg.com https://img.youtube.com",
+    "media-src 'self' blob: data: https://firebasestorage.googleapis.com",
     "font-src 'self' data:",
     `connect-src ${connectSrc.join(" ")}`,
-    "frame-src 'self' https://*.firebaseapp.com https://accounts.google.com https://apis.google.com",
+    "frame-src 'self' https://*.firebaseapp.com https://accounts.google.com https://apis.google.com https://www.youtube.com https://www.youtube-nocookie.com",
     "worker-src 'self'",
     "object-src 'none'",
     "base-uri 'self'",
