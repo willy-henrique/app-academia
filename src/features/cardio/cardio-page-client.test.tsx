@@ -3,20 +3,28 @@
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-const { listCardioSessions, recordCardioCompletionRequest, saveCardioSession, useAuthSession } =
-  vi.hoisted(() => ({
-    listCardioSessions: vi.fn(),
-    recordCardioCompletionRequest: vi.fn(),
-    saveCardioSession: vi.fn(),
-    useAuthSession: vi.fn(),
-  }));
+const {
+  findActiveCardioSession,
+  listCardioSessions,
+  recordCardioCompletionRequest,
+  saveCardioSession,
+  useAuthSession,
+} = vi.hoisted(() => ({
+  findActiveCardioSession: vi.fn(),
+  listCardioSessions: vi.fn(),
+  recordCardioCompletionRequest: vi.fn(),
+  saveCardioSession: vi.fn(),
+  useAuthSession: vi.fn(),
+}));
 
 vi.mock("@/features/auth/auth-session-provider", () => ({
   useAuthSession,
 }));
 
 vi.mock("./cardio-repository", () => ({
+  findActiveCardioSession,
   listCardioSessions,
+  persistActiveCardioLocal: vi.fn(),
   recordCardioCompletionRequest,
   saveCardioSession,
 }));
@@ -27,6 +35,7 @@ describe("CardioPageClient", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     useAuthSession.mockReturnValue({ status: "authenticated", user: { uid: "alice" } });
+    findActiveCardioSession.mockResolvedValue(null);
     listCardioSessions.mockResolvedValue([]);
     saveCardioSession.mockImplementation(async (session: unknown) => session);
     recordCardioCompletionRequest.mockResolvedValue({
@@ -54,6 +63,32 @@ describe("CardioPageClient", () => {
     expect(screen.getByText("Cardio concluído e somado à sua semana.")).toBeTruthy();
     expect(saveCardioSession).toHaveBeenLastCalledWith(
       expect.objectContaining({ durationSeconds: 900, status: "COMPLETED" }),
+    );
+  });
+
+  it("resumes an active cardio session after page reload", async () => {
+    findActiveCardioSession.mockResolvedValue({
+      id: "cardio-active-saved",
+      ownerUid: "alice",
+      prescription: { modality: "RUN", requirement: "OPTIONAL", targetSeconds: 1200 },
+      source: "STANDALONE",
+      startedAt: new Date(Date.now() - 300000).toISOString(),
+      status: "ACTIVE",
+    });
+
+    render(<CardioPageClient />);
+
+    await waitFor(() => {
+      expect(screen.getByText("Cardio em andamento recuperado.")).toBeTruthy();
+      expect(screen.getByRole("button", { name: "Concluir cardio" })).toBeTruthy();
+    });
+
+    fireEvent.click(screen.getByRole("button", { name: "Concluir cardio" }));
+    await waitFor(() => {
+      expect(recordCardioCompletionRequest).toHaveBeenCalledWith("cardio-active-saved");
+    });
+    expect(saveCardioSession).toHaveBeenLastCalledWith(
+      expect.objectContaining({ id: "cardio-active-saved", status: "COMPLETED" }),
     );
   });
 

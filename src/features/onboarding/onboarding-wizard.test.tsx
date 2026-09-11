@@ -47,6 +47,34 @@ describe("OnboardingWizard", () => {
     fireEvent.click(screen.getByRole("button", { name: "Próximo" }));
   });
 
+  it("prevents advancing when height or weight is outside physiological range", async () => {
+    const onSaveDraft = vi.fn().mockResolvedValue(undefined);
+
+    render(
+      <OnboardingWizard
+        initialDraft={{
+          ...createDefaultOnboardingDraft(),
+          currentStepId: "physical_profile",
+          physicalProfile: { heightCm: 175, weightKg: 75 },
+        }}
+        onSaveDraft={onSaveDraft}
+        saveDelayMs={0}
+      />,
+    );
+
+    const heightInput = screen.getByLabelText("Altura");
+    fireEvent.change(heightInput, { target: { value: "-10" } });
+
+    const form = screen.getByRole("heading", { name: "Altura e peso" }).closest("form")!;
+    fireEvent.submit(form);
+
+    await waitFor(() => {
+      expect(screen.getByRole("alert").textContent).toContain("entre 50 cm e 250 cm");
+    });
+
+    expect(screen.getByRole("heading", { name: "Altura e peso" })).toBeTruthy();
+  });
+
   it("restores a later step from a saved draft", () => {
     render(
       <OnboardingWizard

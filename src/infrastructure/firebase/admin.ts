@@ -22,6 +22,7 @@ export type FirebaseAdminEnvironment = Readonly<{
 type FirebaseAdminConfiguration = Readonly<{
   projectId: string;
   serviceAccount?: Readonly<{
+    projectId: string;
     clientEmail: string;
     privateKey: string;
   }>;
@@ -55,6 +56,7 @@ export function readFirebaseAdminConfiguration(
     return {
       projectId,
       serviceAccount: {
+        projectId,
         clientEmail,
         privateKey: privateKey.replace(/\\n/g, "\n"),
       },

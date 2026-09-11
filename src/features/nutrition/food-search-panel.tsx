@@ -216,7 +216,7 @@ export function FoodSearchPanel({
       <div className="grid gap-8 lg:grid-cols-[minmax(0,1.3fr)_minmax(0,1fr)] lg:items-start">
         <div className="space-y-4">
           <form
-            className="flex flex-col gap-3 sm:flex-row sm:items-end"
+            className="flex flex-col gap-3 sm:flex-row sm:items-center"
             role="search"
             onSubmit={(event) => void search(event)}
           >
@@ -234,7 +234,7 @@ export function FoodSearchPanel({
               />
             </div>
             <Button
-              className="sm:mb-[1.625rem]"
+              className="self-start sm:self-auto sm:mt-1"
               loading={isSearching}
               loadingLabel="Buscando"
               type="submit"

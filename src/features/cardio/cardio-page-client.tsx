@@ -1,6 +1,6 @@
 "use client";
 
-import { Bike, CalendarClock, CircleCheck, Footprints, HeartPulse, Timer } from "lucide-react";
+import { Bike, CalendarClock, CircleCheck, Footprints, HeartPulse, Timer, Play } from "lucide-react";
 import { useEffect, useState } from "react";
 
 import { PageHeader, SectionHeader } from "@/components/layout/page-header";
@@ -19,8 +19,7 @@ import {
   completeCardioSession,
   createCardioPrescription,
   createCardioSession,
-  describeCardioRequirement,
-  rescheduleCardioSession,
+    rescheduleCardioSession,
   skipCardioSession,
   startCardioSession,
   type CardioModality,
@@ -31,7 +30,9 @@ import { useAuthSession } from "@/features/auth/auth-session-provider";
 import { formatElapsed } from "@/features/workout/workout-summary";
 
 import {
+  findActiveCardioSession,
   listCardioSessions,
+  persistActiveCardioLocal,
   recordCardioCompletionRequest,
   saveCardioSession,
 } from "./cardio-repository";
@@ -102,9 +103,27 @@ export function CardioPageClient() {
   useEffect(() => {
     let active = true;
 
-    async function loadHistory() {
+    async function loadData() {
       if (!user) {
         return;
+      }
+
+      try {
+        // Recupera sessão ativa após refresh para evitar estado órfão
+        const activeSession = await findActiveCardioSession(user.uid);
+        if (active && activeSession) {
+          setSession(activeSession);
+          setModality(activeSession.prescription.modality);
+          setMinutes(String(Math.max(1, Math.round(activeSession.prescription.targetSeconds / 60))));
+          setFeedback({
+            text: activeSession.status === "ACTIVE"
+              ? "Cardio em andamento recuperado."
+              : "Sessão de cardio pendente recuperada.",
+            tone: "info",
+          });
+        }
+      } catch (err) {
+        console.error("[CardioPageClient] falha ao restaurar cardio ativo:", err);
       }
 
       try {
@@ -119,7 +138,7 @@ export function CardioPageClient() {
       }
     }
 
-    void loadHistory();
+    void loadData();
 
     return () => {
       active = false;
@@ -171,18 +190,33 @@ export function CardioPageClient() {
     await persist(startCardioSession(created), { text: "Cardio iniciado.", tone: "info" });
   }
 
+  async function resume() {
+    if (!session) return;
+    const resumed = startCardioSession(session);
+    setNow(new Date());
+    await persist(resumed, { text: "Cardio retomado.", tone: "info" });
+  }
+
   async function finish() {
     if (!session) {
       return;
     }
 
-    const durationSeconds = Math.max(1, Number.parseInt(minutes, 10) || 15) * 60;
+    // Calcula duração real feita baseada no timer ou no stepper
+    const startedAtMs = session.startedAt ? Date.parse(session.startedAt) : Number.NaN;
+    const calculatedMinutes = Number.isFinite(startedAtMs)
+      ? Math.max(1, Math.round((Date.now() - startedAtMs) / 60000))
+      : Number.parseInt(minutes, 10) || 15;
+
+    const chosenMinutes = Number.parseInt(minutes, 10) || calculatedMinutes;
+    const durationSeconds = chosenMinutes * 60;
     const completed = completeCardioSession(session, { durationSeconds });
 
     setSaving(true);
     try {
       await saveCardioSession(completed);
       setSession(completed);
+      persistActiveCardioLocal(null);
       try {
         await recordCardioCompletionRequest(completed.id);
         setFeedback({ text: "Cardio concluído e somado à sua semana.", tone: "success" });
@@ -212,6 +246,7 @@ export function CardioPageClient() {
         text: "Cardio pulado com o motivo registrado. Seu treino de força continua concluído.",
         tone: "info",
       });
+      persistActiveCardioLocal(null);
       setHistory((current) => [skipped, ...current].slice(0, historyLimit));
       setSkipReason("");
     } catch {
@@ -258,17 +293,13 @@ export function CardioPageClient() {
             aria-atomic="true"
             aria-live="polite"
             className={
-              feedback.text === "Nenhum cardio em andamento."
-                ? "sr-only"
-                : `flex items-center gap-2 rounded-wt-lg px-4 py-3 text-wt-body-sm ${
-                    feedback.tone === "success"
-                      ? "bg-wt-success-subtle text-wt-success-text"
-                      : feedback.tone === "warning"
-                        ? "bg-wt-warning-subtle text-wt-warning-text"
-                        : feedback.tone === "danger"
-                          ? "bg-wt-danger-subtle text-wt-danger-text"
-                          : "bg-wt-surface-elevated text-wt-text-secondary-strong"
-                  }`
+              feedback.tone === "success"
+                ? "rounded-wt-lg bg-wt-success-subtle px-4 py-3 text-wt-body-sm text-wt-success-text flex items-center gap-2"
+                : feedback.tone === "danger"
+                  ? "rounded-wt-lg bg-wt-danger-subtle px-4 py-3 text-wt-body-sm text-wt-danger-text flex items-center gap-2"
+                  : feedback.tone === "warning"
+                    ? "rounded-wt-lg bg-wt-surface-elevated px-4 py-3 text-wt-body-sm text-wt-text-primary flex items-center gap-2"
+                    : "rounded-wt-lg bg-wt-surface px-4 py-3 text-wt-body-sm text-wt-text-secondary flex items-center gap-2 border border-wt-border"
             }
             role="status"
           >
@@ -304,55 +335,51 @@ export function CardioPageClient() {
                 />
                 <Select
                   id="cardio-requirement"
-                  label="Tipo de cardio"
-                  onChange={(event) => setRequirement(event.target.value as CardioRequirement)}
+                  label="Papel no plano"
                   options={cardioRequirementOptions.map((option) => ({
-                    label: describeCardioRequirement(option),
+                    label:
+                      option === "OPTIONAL"
+                        ? "Opcional"
+                        : option === "RECOMMENDED"
+                          ? "Recomendado"
+                          : "Obrigatório pelo plano",
                     value: option,
                   }))}
                   value={requirement}
+                  onChange={(event) => setRequirement(event.target.value as CardioRequirement)}
                 />
               </div>
-              <Button
-                className="w-full sm:w-auto"
-                disabled={saving}
-                size="xl"
-                onClick={() => void start()}
-              >
+              <Button disabled={saving} size="xl" onClick={() => void start()}>
                 Iniciar cardio
               </Button>
             </Card>
-          ) : session ? (
+          ) : (
             <Card as="div" className="space-y-6 p-5 sm:p-6" elevated>
               <div className="flex items-start justify-between gap-3">
                 <div className="flex items-center gap-3">
                   <span
                     aria-hidden="true"
-                    className="grid size-11 place-items-center rounded-wt-lg bg-wt-accent-subtle text-wt-accent-text"
+                    className="grid size-12 place-items-center rounded-wt-lg bg-wt-accent-subtle text-wt-accent-text"
                   >
-                    <ActiveIcon className="size-5" />
+                    <ActiveIcon className="size-6" />
                   </span>
                   <div>
-                    <h2 className="wt-text-h2">{modalityLabels[session.prescription.modality]}</h2>
-                    <p className="text-wt-body-sm text-wt-text-secondary-strong">
-                      Meta: {formatMinutes(targetSeconds)}
-                    </p>
+                    <p className="wt-kicker">Cardio em andamento</p>
+                    <h2 className="wt-text-h1">
+                      {modalityLabels[session.prescription.modality]} ·{" "}
+                      {formatMinutes(session.prescription.targetSeconds)}
+                    </h2>
                   </div>
                 </div>
-                {session.status === "RESCHEDULED" ? (
-                  <Badge icon={<CalendarClock />} tone="warning">
-                    Reagendado
-                  </Badge>
-                ) : (
-                  <Badge tone="accent">Em andamento</Badge>
-                )}
+                <Badge tone={running ? "accent" : "warning"}>
+                  {running ? "Em andamento" : "Pendente"}
+                </Badge>
               </div>
 
               {running ? (
-                <div className="space-y-3">
-                  <p className="flex items-center gap-2 text-wt-label font-medium text-wt-text-secondary-strong">
-                    <Timer aria-hidden="true" className="size-4" />
-                    Tempo decorrido
+                <div className="space-y-2">
+                  <p className="text-wt-caption text-wt-text-secondary-strong">
+                    Tempo de cardio decorrido
                   </p>
                   <p
                     aria-hidden="true"
@@ -369,7 +396,11 @@ export function CardioPageClient() {
                     valueText={`${Math.floor(elapsedSeconds / 60)} de ${Math.round(targetSeconds / 60)} minutos`}
                   />
                 </div>
-              ) : null}
+              ) : (
+                <div className="rounded-wt-md bg-wt-surface-elevated p-4 text-wt-body-sm text-wt-text-secondary">
+                  Esta sessão está salva como pendente. Você pode retomá-la agora ou finalizar diretamente.
+                </div>
+              )}
 
               <NumberStepper
                 hint="Ajuste se fez mais ou menos que o planejado."
@@ -384,41 +415,35 @@ export function CardioPageClient() {
               />
 
               <div className="grid gap-2 sm:flex">
+                {!running ? (
+                  <Button disabled={saving} size="xl" variant="secondary" onClick={() => void resume()}>
+                    <Play className="size-4" />
+                    Retomar cardio
+                  </Button>
+                ) : null}
                 <Button disabled={saving} size="xl" onClick={() => void finish()}>
                   Concluir cardio
                 </Button>
                 <Button
                   disabled={saving}
                   size="xl"
-                  variant="secondary"
+                  variant="ghost"
                   onClick={() => void reschedule()}
                 >
+                  <CalendarClock aria-hidden="true" className="size-4" />
                   Reagendar para amanhã
                 </Button>
               </div>
 
-              <div className="space-y-3 border-t border-wt-border pt-5">
-                <div>
-                  <h3 className="wt-text-h3">Não vai dar hoje?</h3>
-                  <p className="text-wt-body-sm text-wt-text-secondary-strong">
-                    Tudo bem pular. Só registramos o motivo para o seu histórico.
-                  </p>
-                </div>
-                <div aria-label="Motivos rápidos" className="flex flex-wrap gap-2" role="group">
+              <div className="space-y-2 border-t border-wt-border pt-4">
+                <p className="wt-text-label">Pular o cardio hoje</p>
+                <div className="flex flex-wrap gap-2">
                   {quickSkipReasons.map((reason) => (
                     <button
-                      aria-pressed={skipReason === reason}
-                      className={`inline-flex min-h-11 items-center rounded-wt-full border px-4 text-wt-label font-medium transition-colors duration-150 ${
-                        skipReason === reason
-                          ? "border-wt-accent-border bg-wt-accent-subtle text-wt-accent-text"
-                          : "border-wt-border bg-wt-surface text-wt-text-primary hover:border-wt-border-strong"
-                      }`}
+                      className="rounded-wt-full border border-wt-border bg-wt-surface px-3 py-1.5 text-xs font-semibold text-wt-text-secondary hover:border-wt-border-strong hover:text-wt-text-primary"
                       key={reason}
                       type="button"
-                      onClick={() => {
-                        setSkipReason(reason);
-                        setSkipError(null);
-                      }}
+                      onClick={() => setSkipReason(reason)}
                     >
                       {reason}
                     </button>
@@ -426,75 +451,89 @@ export function CardioPageClient() {
                 </div>
                 <Input
                   error={skipError ?? undefined}
-                  id="cardio-skip-reason"
                   label="Motivo para pular"
-                  maxLength={500}
+                  placeholder="Ex.: sem tempo hoje, cansaço, dor no joelho"
                   value={skipReason}
                   onChange={(event) => {
                     setSkipReason(event.target.value);
-                    setSkipError(null);
+                    if (skipError) {
+                      setSkipError(null);
+                    }
                   }}
                 />
-                <Button disabled={saving} variant="ghost" onClick={() => void skip()}>
+                <Button disabled={saving} variant="danger" onClick={() => void skip()}>
                   Pular cardio
                 </Button>
               </div>
             </Card>
-          ) : null}
+          )}
         </div>
 
-        <section aria-labelledby="cardio-history-title" className="space-y-3">
-          <SectionHeader id="cardio-history-title" title="Seus cardios recentes" />
-          {historyFailed && history.length === 0 ? (
-            <p className="rounded-wt-lg bg-wt-surface-elevated px-4 py-3 text-wt-body-sm text-wt-text-secondary-strong">
-              Não foi possível carregar seu histórico de cardio agora. O que você registrar aqui
-              continua salvo.
+        <section aria-labelledby="cardio-history-title" className="space-y-4">
+          <SectionHeader
+            description="Suas últimas sessões individuais. Cardio fica separado da musculação."
+            id="cardio-history-title"
+            title="Histórico de cardio"
+          />
+
+          {historyFailed ? (
+            <p className="text-wt-body-sm text-wt-text-secondary">
+              Não foi possível carregar o histórico de cardio agora.
             </p>
           ) : history.length === 0 ? (
             <EmptyState
-              description="Quando fizer, pular ou reagendar um cardio, ele aparece aqui."
-              icon={<HeartPulse />}
-              title="Nenhum cardio registrado ainda."
+              description="Suas sessões de esteira, bicicleta e caminhada aparecem aqui assim que forem concluídas."
+              icon={<Timer aria-hidden="true" className="size-8 text-wt-text-secondary" />}
+              title="Nenhum cardio recente"
             />
           ) : (
-            <Card as="div" className="p-2">
-              <ul className="divide-y divide-wt-border">
-                {history.map((item) => {
-                  const Icon = modalityIcons[item.prescription.modality];
-                  const date = formatShortDate(
-                    item.completedAt ?? item.skippedAt ?? item.startedAt,
-                  );
+            <ul className="divide-y divide-wt-border overflow-hidden rounded-wt-card border border-wt-border bg-wt-surface">
+              {history.map((item) => {
+                const Icon = modalityIcons[item.prescription.modality];
+                const isSkipped = item.status === "SKIPPED";
+                const dateLabel = formatShortDate(
+                  typeof item.completedAt === "string"
+                    ? item.completedAt
+                    : typeof item.createdAt === "string"
+                      ? item.createdAt
+                      : null,
+                );
 
-                  return (
-                    <li className="flex items-center gap-3 px-3 py-3" key={item.id}>
-                      <span
-                        aria-hidden="true"
-                        className="grid size-9 shrink-0 place-items-center rounded-wt-md bg-wt-surface-elevated text-wt-text-secondary-strong"
-                      >
-                        <Icon className="size-4" />
-                      </span>
-                      <span className="min-w-0 flex-1">
-                        <span className="block text-wt-label font-semibold">
+                return (
+                  <li
+                    className="flex min-h-16 items-center gap-3 px-4 py-3"
+                    key={item.id}
+                  >
+                    <span
+                      aria-hidden="true"
+                      className="grid size-10 shrink-0 place-items-center rounded-wt-md bg-wt-surface-elevated text-wt-text-secondary-strong"
+                    >
+                      <Icon className="size-5" />
+                    </span>
+                    <div className="min-w-0 flex-1">
+                      <div className="flex items-center gap-2">
+                        <span className="truncate text-wt-label font-semibold">
                           {modalityLabels[item.prescription.modality]}
                         </span>
-                        {date ? (
-                          <span className="block text-xs text-wt-text-secondary-strong">
-                            {date}
-                          </span>
-                        ) : null}
-                      </span>
-                      {item.status === "COMPLETED" ? (
-                        <Badge tone="success">{formatMinutes(item.durationSeconds)}</Badge>
-                      ) : item.status === "SKIPPED" ? (
-                        <Badge tone="neutral">Pulado</Badge>
-                      ) : (
-                        <Badge tone="warning">Pendente</Badge>
-                      )}
-                    </li>
-                  );
-                })}
-              </ul>
-            </Card>
+                        {isSkipped ? (
+                          <Badge tone="neutral">Pulado</Badge>
+                        ) : item.status === "RESCHEDULED" ? (
+                          <Badge tone="warning">Reagendado</Badge>
+                        ) : (
+                          <Badge tone="success">Concluído</Badge>
+                        )}
+                      </div>
+                      <p className="text-xs text-wt-text-secondary-strong">
+                        {isSkipped
+                          ? item.skipReason ?? "Sem motivo informado"
+                          : `${formatMinutes(item.durationSeconds)} · meta ${formatMinutes(item.prescription.targetSeconds)}`}
+                        {dateLabel ? ` · ${dateLabel}` : ""}
+                      </p>
+                    </div>
+                  </li>
+                );
+              })}
+            </ul>
           )}
         </section>
       </div>

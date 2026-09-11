@@ -382,6 +382,7 @@ export function OnboardingWizard({
   const [budgetText, setBudgetText] = useState(() =>
     formatBudgetInput(initialDraft.nutritionBudgetCents),
   );
+  const [physicalProfileError, setPhysicalProfileError] = useState<string | null>(null);
   const saveTimeout = useRef<number | undefined>(undefined);
   const hasHydratedRef = useRef(false);
   const stepHeadingRef = useRef<HTMLHeadingElement>(null);
@@ -424,7 +425,7 @@ export function OnboardingWizard({
   }, [onSaveDraft, saveDelayMs, watchedDraft]);
 
   const draft = (watchedDraft ?? initialDraft) as OnboardingDraft;
-  const currentStepId = getValues("currentStepId");
+  const currentStepId = draft.currentStepId ?? "presentation";
   const currentStepIndex = clampStepIndex(currentStepId);
   const currentStep = onboardingSteps[currentStepIndex];
   const isFirstStep = currentStepIndex === 0;
@@ -458,12 +459,36 @@ export function OnboardingWizard({
   }
 
   function goToStep(targetIndex: number) {
+    setPhysicalProfileError(null);
     markStepComplete(getValues("currentStepId"));
     update("currentStepId", getStepIdByIndex(targetIndex));
   }
 
   function goNext() {
-    if (currentStep.id === "presentation") {
+    const activeStepId = draft.currentStepId ?? "presentation";
+    if (activeStepId === "physical_profile") {
+      const heightVal = getValues("physicalProfile.heightCm");
+      const weightVal = getValues("physicalProfile.weightKg");
+
+      const h = typeof heightVal === "number" && !Number.isNaN(heightVal) ? heightVal : null;
+      const w = typeof weightVal === "number" && !Number.isNaN(weightVal) ? weightVal : null;
+
+      if (h !== null) {
+        if (h < 50 || h > 250) {
+          setPhysicalProfileError("Informe uma altura válida entre 50 cm e 250 cm.");
+          return;
+        }
+      }
+      if (w !== null) {
+        if (w < 20 || w > 400) {
+          setPhysicalProfileError("Informe um peso válido entre 20 kg e 400 kg.");
+          return;
+        }
+      }
+      setPhysicalProfileError(null);
+    }
+
+    if (activeStepId === "presentation") {
       update("presentationAcknowledged", true);
     }
     goToStep(currentStepIndex + 1);
@@ -533,6 +558,7 @@ export function OnboardingWizard({
 
       <form
         className="mt-8"
+        noValidate
         onSubmit={(event) => {
           event.preventDefault();
           if (isLastStep) {
@@ -623,6 +649,11 @@ export function OnboardingWizard({
                   {...register("physicalProfile.weightKg", { valueAsNumber: true })}
                 />
               </div>
+              {physicalProfileError ? (
+                <p className="rounded-wt-md bg-wt-danger-subtle p-3 text-xs text-wt-danger-text" role="alert">
+                  {physicalProfileError}
+                </p>
+              ) : null}
               <p className="wt-text-caption text-wt-text-secondary-strong">
                 Fuso horário detectado: {timezoneLabel}. Serve só para fechar sua semana no horário
                 certo.

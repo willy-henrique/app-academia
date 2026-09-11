@@ -1,15 +1,16 @@
 import { estimateWorkoutDuration } from "@/domain/workout/workout";
 import type { WorkoutSession } from "@/domain/workout/session";
+import { resolveDynamicWorkoutTitle } from "@/domain/workout/muscle-split";
 
 /**
- * Leitura de apresentação de uma sessão de força. Tudo aqui é derivado dos
- * dados persistidos — nada é estimado além da duração prevista, que usa o
+ * Leitura de apresentacao de uma sessao de forca. Tudo aqui e derivado dos
+ * dados persistidos - nada e estimado alem da duracao prevista, que usa o
  * mesmo estimador do gerador de planos.
  */
 export type WorkoutSessionOverview = Readonly<{
   completedExercises: number;
   completedSets: number;
-  /** Duração real (início → conclusão), só quando os dois horários existem. */
+  /** Duracao real (inicio a conclusao), so quando os dois horarios existem. */
   durationSeconds: number | null;
   estimatedMinutes: number;
   exerciseCount: number;
@@ -20,16 +21,7 @@ export type WorkoutSessionOverview = Readonly<{
   totalVolumeKg: number;
 }>;
 
-const genericBlockTitles = new Set(["bloco principal"]);
 
-/**
- * Exercício que ainda aceita séries, ou `null` quando a parte de força acabou.
- *
- * Ao concluir o último exercício, `advanceWorkoutExercise` mantém o índice nele
- * (não há próximo) e a sessão fica `PAUSED`. Olhar só para o índice mostraria
- * "Série 4 de 3" e deixaria gravar séries além da prescrição; por isso a
- * decisão usa as séries concluídas, que são o dado persistido.
- */
 export function getActiveExercise(
   session: WorkoutSession,
 ): WorkoutSession["exerciseQueue"][number] | null {
@@ -43,13 +35,7 @@ export function getActiveExercise(
 }
 
 export function resolveWorkoutTitle(session: WorkoutSession): string {
-  const blockTitle = session.exerciseQueue[0]?.blockTitle?.trim();
-
-  if (!blockTitle || genericBlockTitles.has(blockTitle.toLocaleLowerCase("pt-BR"))) {
-    return "Treino de força";
-  }
-
-  return blockTitle;
+  return resolveDynamicWorkoutTitle(session);
 }
 
 export function describeWorkoutSession(session: WorkoutSession): WorkoutSessionOverview {
@@ -74,7 +60,9 @@ export function describeWorkoutSession(session: WorkoutSession): WorkoutSessionO
           : "not_started";
 
   return {
-    completedExercises: session.progress.completedExercises.length,
+    completedExercises: session.exerciseQueue.filter(
+      (item) => item.completedSets >= item.prescription.sets,
+    ).length,
     completedSets: session.progress.totalSets,
     durationSeconds,
     estimatedMinutes: Math.max(5, Math.round(estimate.totalSeconds / 60)),
@@ -87,7 +75,7 @@ export function describeWorkoutSession(session: WorkoutSession): WorkoutSessionO
   };
 }
 
-/** 87 → "01:27"; usado no descanso, onde os segundos importam. */
+/** 87 -> "01:27"; usado no descanso, onde os segundos importam. */
 export function formatClock(totalSeconds: number): string {
   const safe = Math.max(0, Math.floor(totalSeconds));
   const minutes = Math.floor(safe / 60);
@@ -101,27 +89,31 @@ export function formatElapsed(totalSeconds: number): string {
   const hours = Math.floor(safe / 3600);
   const minutes = Math.floor((safe % 3600) / 60);
   const seconds = safe % 60;
-  const mmss = `${minutes.toString().padStart(2, "0")}:${seconds.toString().padStart(2, "0")}`;
-  return hours > 0 ? `${hours}:${mmss}` : mmss;
+
+  if (hours > 0) {
+    return `${hours}:${minutes.toString().padStart(2, "0")}:${seconds.toString().padStart(2, "0")}`;
+  }
+
+  return `${minutes.toString().padStart(2, "0")}:${seconds.toString().padStart(2, "0")}`;
 }
 
-/** 2640 → "44 min"; 4380 → "1h13". */
-export function formatDurationShort(totalSeconds: number): string {
-  const minutes = Math.max(1, Math.round(totalSeconds / 60));
-  const hours = Math.floor(minutes / 60);
-  const rest = minutes % 60;
-  return hours > 0 ? `${hours}h${rest.toString().padStart(2, "0")}` : `${minutes} min`;
-}
+export function formatKg(loadKg: number): string {
+  if (loadKg <= 0) {
+    return "peso corporal";
+  }
 
-export function formatKg(value: number): string {
-  return `${new Intl.NumberFormat("pt-BR", { maximumFractionDigits: 1 }).format(value)} kg`;
+  return `${new Intl.NumberFormat("pt-BR", { maximumFractionDigits: 1 }).format(loadKg)} kg`;
 }
 
 export function formatNumber(value: number): string {
   return new Intl.NumberFormat("pt-BR", { maximumFractionDigits: 1 }).format(value);
 }
 
-/** "1 série", "3 séries" — sem "(s)". */
 export function pluralize(count: number, singular: string, plural: string): string {
   return `${count} ${count === 1 ? singular : plural}`;
+}
+
+export function formatDurationShort(totalSeconds: number): string {
+  const minutes = Math.max(1, Math.round(totalSeconds / 60));
+  return `${minutes} min`;
 }

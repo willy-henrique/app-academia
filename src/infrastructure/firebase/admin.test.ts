@@ -19,6 +19,7 @@ describe("readFirebaseAdminConfiguration", () => {
     ).toEqual({
       projectId: "willtreino-dev",
       serviceAccount: {
+        projectId: "willtreino-dev",
         clientEmail: "firebase-adminsdk@example.iam.gserviceaccount.com",
         privateKey: "line-one\nline-two",
       },
