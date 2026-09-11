@@ -125,6 +125,7 @@ Gere um treino específico para a sessão de hoje e as diretrizes de dieta corre
         { role: "user", content: userPrompt },
       ],
       temperature: 0.3,
+      max_tokens: 950,
       response_format: { type: "json_object" },
     }),
   });

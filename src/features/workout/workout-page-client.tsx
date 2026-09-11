@@ -735,7 +735,9 @@ export function WorkoutPageClient({ autosaveDelayMs = 550 }: WorkoutPageClientPr
           />
         </div>
       ) : (
-        <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_19rem] lg:items-start">
+        <div className="space-y-6">
+          <AiCoachSection draft={onboardingDraft} />
+          <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_19rem] lg:items-start">
           <div className="min-w-0 space-y-4">
             {awaitingFinish ? (
               <Card as="div" className="space-y-5 p-5 sm:p-7" elevated>
@@ -1000,6 +1002,7 @@ export function WorkoutPageClient({ autosaveDelayMs = 550 }: WorkoutPageClientPr
               />
             </Card>
           </aside>
+        </div>
         </div>
       )}
 
