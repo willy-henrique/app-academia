@@ -8,8 +8,17 @@ next-env.d.ts
 
 # local environment and Firebase emulators
 .env
-.env.local
-.env.*.local
+.env*.local
+.env.*
+.env.local.bak*
+*.env
+*.json.bak
+*serviceaccount*.json
+*firebase*adminsdk*.json
+*.pem
+*.key
+*.log
+server.log
 /.firebase
 
 # diagnostics
