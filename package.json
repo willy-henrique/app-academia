@@ -26,7 +26,6 @@
     "@hookform/resolvers": "5.9.1",
     "@radix-ui/react-dialog": "1.1.23",
     "@radix-ui/react-toast": "1.2.23",
-    "@rolldown/binding-win32-x64-msvc": "^1.2.8",
     "@tailwindcss/postcss": "4.3.3",
     "class-variance-authority": "0.7.1",
     "firebase": "12.18.0",
