@@ -29,7 +29,9 @@ type RestTimerProps = Readonly<{
 function playBeep(freq = 880, duration = 0.15) {
   if (typeof window === "undefined") return;
   try {
-    const AudioContext = window.AudioContext || (window as unknown as { webkitAudioContext: typeof window.AudioContext }).webkitAudioContext;
+    const AudioContext =
+      window.AudioContext ||
+      (window as unknown as { webkitAudioContext: typeof window.AudioContext }).webkitAudioContext;
     if (!AudioContext) return;
     const ctx = new AudioContext();
     const osc = ctx.createOscillator();
@@ -55,7 +57,7 @@ export function RestTimer({
   onSkip,
   remainingSeconds,
 }: RestTimerProps) {
-    // Beep tátil/sonoro sutil nos últimos 3 segundos para alertar o atleta sem precisar olhar a tela
+  // Beep tátil/sonoro sutil nos últimos 3 segundos para alertar o atleta sem precisar olhar a tela
   useEffect(() => {
     if (remainingSeconds === 3 || remainingSeconds === 2 || remainingSeconds === 1) {
       playBeep(660, 0.1);

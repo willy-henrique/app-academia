@@ -62,7 +62,9 @@ describe("AppShell", () => {
     renderShell();
 
     expect(
-      screen.getAllByRole("link", { name: "Treino" }).map((link) => link.getAttribute("aria-current")),
+      screen
+        .getAllByRole("link", { name: "Treino" })
+        .map((link) => link.getAttribute("aria-current")),
     ).toEqual(["page", "page"]);
   });
 

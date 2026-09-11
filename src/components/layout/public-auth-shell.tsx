@@ -26,11 +26,7 @@ export function PublicAuthShell({
       id="main-content"
     >
       <header className="relative mx-auto flex min-h-20 w-full max-w-6xl items-center justify-between px-5 sm:px-8">
-        <Link
-          aria-label="WillTreino, início"
-          className="flex items-center rounded-wt-md"
-          href="/"
-        >
+        <Link aria-label="WillTreino, início" className="flex items-center rounded-wt-md" href="/">
           <Logo />
         </Link>
         {action ? (
@@ -50,7 +46,9 @@ export function PublicAuthShell({
               <p className="wt-kicker">{eyebrow}</p>
               <h1 className="wt-text-h1">{title}</h1>
               {description ? (
-                <p className="text-wt-body-sm text-wt-text-secondary-strong sm:text-wt-body">{description}</p>
+                <p className="text-wt-body-sm text-wt-text-secondary-strong sm:text-wt-body">
+                  {description}
+                </p>
               ) : null}
             </div>
           ) : null}

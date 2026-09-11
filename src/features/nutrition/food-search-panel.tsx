@@ -133,8 +133,8 @@ function FoodLogHistory({ entries }: Readonly<{ entries: readonly FoodLogEntry[]
                     {entry.food.foodName}
                   </p>
                   <p className="text-xs text-wt-text-secondary-strong">
-                    {mealLabels[entry.meal]} · {entry.portionGrams} g ·{" "}
-                    {entry.nutrition.energyKcal} kcal
+                    {mealLabels[entry.meal]} · {entry.portionGrams} g · {entry.nutrition.energyKcal}{" "}
+                    kcal
                   </p>
                 </div>
                 <span className="shrink-0 text-xs font-semibold text-wt-text-secondary-strong">

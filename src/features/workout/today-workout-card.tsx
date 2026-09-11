@@ -36,7 +36,9 @@ type TodayState =
     };
 
 export function isOnboardingComplete(draft: OnboardingDraft | null): boolean {
-  return Boolean(draft && (draft.summaryAcknowledged || draft.completedStepIds.includes("summary")));
+  return Boolean(
+    draft && (draft.summaryAcknowledged || draft.completedStepIds.includes("summary")),
+  );
 }
 
 /**
@@ -128,7 +130,12 @@ export function TodayWorkoutCard() {
           : { label: "Começar treino", variant: "primary" as const };
 
   return (
-    <Card as="article" aria-labelledby="today-workout-title" className="space-y-5 p-5 sm:p-6" elevated>
+    <Card
+      as="article"
+      aria-labelledby="today-workout-title"
+      className="space-y-5 p-5 sm:p-6"
+      elevated
+    >
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0 space-y-1">
           <p className="wt-kicker">Treino de hoje</p>
@@ -195,7 +202,11 @@ export function TodayWorkoutCard() {
       )}
 
       <Link
-        className={buttonVariants({ className: "w-full sm:w-auto", size: "xl", variant: cta.variant })}
+        className={buttonVariants({
+          className: "w-full sm:w-auto",
+          size: "xl",
+          variant: cta.variant,
+        })}
         href="/workout"
       >
         {cta.label}

@@ -71,9 +71,7 @@ describe("SegmentedControl", () => {
     );
 
     expect(screen.getByRole("group", { name: "Modalidade" })).toBeTruthy();
-    expect((screen.getByRole("radio", { name: "Corrida" }) as HTMLInputElement).checked).toBe(
-      true,
-    );
+    expect((screen.getByRole("radio", { name: "Corrida" }) as HTMLInputElement).checked).toBe(true);
 
     fireEvent.click(screen.getByRole("radio", { name: "Bicicleta" }));
     expect(onValueChange).toHaveBeenCalledWith("BIKE");

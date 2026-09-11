@@ -181,7 +181,13 @@ export function DesignSystemShowcase() {
         <Section title="Campos">
           <div className="grid gap-6 md:grid-cols-2">
             <Input hint="Usado só para login." label="E-mail" type="email" />
-            <Input error="Informe um valor entre 20 e 400." label="Peso" unit="kg" value="5" readOnly />
+            <Input
+              error="Informe um valor entre 20 e 400."
+              label="Peso"
+              unit="kg"
+              value="5"
+              readOnly
+            />
             <Select
               label="Tipo de cardio"
               options={[

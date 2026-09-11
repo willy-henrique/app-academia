@@ -37,7 +37,10 @@ export function Sheet({
           className="wt-sheet-in fixed inset-x-0 bottom-0 z-[var(--wt-z-modal)] flex max-h-[min(88dvh,44rem)] flex-col rounded-t-wt-xl border border-wt-border bg-wt-surface text-wt-text-primary shadow-wt-elevated outline-none sm:inset-x-auto sm:bottom-auto sm:left-1/2 sm:top-1/2 sm:w-[min(calc(100vw-2rem),32rem)] sm:-translate-x-1/2 sm:-translate-y-1/2 sm:rounded-wt-xl"
           {...(description ? {} : { "aria-describedby": undefined })}
         >
-          <div aria-hidden="true" className="mx-auto mt-2 h-1 w-10 rounded-full bg-wt-border sm:hidden" />
+          <div
+            aria-hidden="true"
+            className="mx-auto mt-2 h-1 w-10 rounded-full bg-wt-border sm:hidden"
+          />
           <div className="flex items-start justify-between gap-4 px-5 pb-2 pt-3 sm:pt-5">
             <div className="min-w-0 space-y-1">
               <DialogPrimitive.Title className="wt-text-h2">{title}</DialogPrimitive.Title>

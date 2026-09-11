@@ -10,10 +10,7 @@ export const metadata: Metadata = {
   applicationName: "WillTreino",
   description: "Planeje e execute treinos solo ou acompanhados, com privacidade por padrão.",
   icons: {
-    icon: [
-      { url: "/favicon.ico" },
-      { url: "/favicon.svg", type: "image/svg+xml" },
-    ],
+    icon: [{ url: "/favicon.ico" }, { url: "/favicon.svg", type: "image/svg+xml" }],
     apple: "/icons/icon.svg",
   },
   title: "WillTreino",

@@ -138,7 +138,9 @@ describe("WeeklyDashboard", () => {
     render(<WeeklyDashboard now={now} />);
 
     await waitFor(() => {
-      expect(screen.getByRole("alert").textContent).toContain("Não conseguimos carregar sua semana");
+      expect(screen.getByRole("alert").textContent).toContain(
+        "Não conseguimos carregar sua semana",
+      );
     });
     fireEvent.click(screen.getByRole("button", { name: "Tentar novamente" }));
 

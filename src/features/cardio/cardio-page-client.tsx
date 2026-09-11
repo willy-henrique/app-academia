@@ -461,7 +461,9 @@ export function CardioPageClient() {
               <ul className="divide-y divide-wt-border">
                 {history.map((item) => {
                   const Icon = modalityIcons[item.prescription.modality];
-                  const date = formatShortDate(item.completedAt ?? item.skippedAt ?? item.startedAt);
+                  const date = formatShortDate(
+                    item.completedAt ?? item.skippedAt ?? item.startedAt,
+                  );
 
                   return (
                     <li className="flex items-center gap-3 px-3 py-3" key={item.id}>

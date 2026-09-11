@@ -187,8 +187,7 @@ export function SendTrainingInvitePanel({
 
       <p className="flex items-start gap-2 wt-text-caption text-wt-text-secondary-strong">
         <ShieldCheck aria-hidden="true" className="mt-0.5 size-4 shrink-0" />
-        Vocês só veem nome e WillTreino ID um do outro. Cargas, saúde e medidas continuam
-        privadas.
+        Vocês só veem nome e WillTreino ID um do outro. Cargas, saúde e medidas continuam privadas.
       </p>
 
       <LiveRegion politeness="polite">{error ?? message}</LiveRegion>

@@ -36,7 +36,11 @@ import {
   type OnboardingStepId,
 } from "@/domain/onboarding/onboarding";
 import { equipmentOptions } from "@/domain/workout/exercise";
-import { equipmentLabels, isKnownEquipment, type Equipment } from "@/features/workout/exercise-labels";
+import {
+  equipmentLabels,
+  isKnownEquipment,
+  type Equipment,
+} from "@/features/workout/exercise-labels";
 
 type OnboardingWizardProps = Readonly<{
   initialDraft?: OnboardingDraft;
@@ -301,7 +305,9 @@ function buildSummary(draft: OnboardingDraft): SummaryItem[] {
       value:
         [
           draft.routine.daysPerWeek ? `${draft.routine.daysPerWeek}× por semana` : null,
-          draft.routine.sessionMinutes ? `${formatDurationLabel(draft.routine.sessionMinutes)} por treino` : null,
+          draft.routine.sessionMinutes
+            ? `${formatDurationLabel(draft.routine.sessionMinutes)} por treino`
+            : null,
         ]
           .filter(Boolean)
           .join(" · ") || notInformed,
@@ -585,7 +591,11 @@ export function OnboardingWizard({
           ) : null}
 
           {currentStep.id === "goal" ? (
-            <OptionCards label="Objetivo principal" options={goalCardOptions} {...register("goal")} />
+            <OptionCards
+              label="Objetivo principal"
+              options={goalCardOptions}
+              {...register("goal")}
+            />
           ) : null}
 
           {currentStep.id === "physical_profile" ? (
@@ -614,8 +624,8 @@ export function OnboardingWizard({
                 />
               </div>
               <p className="wt-text-caption text-wt-text-secondary-strong">
-                Fuso horário detectado: {timezoneLabel}. Serve só para fechar sua semana no
-                horário certo.
+                Fuso horário detectado: {timezoneLabel}. Serve só para fechar sua semana no horário
+                certo.
               </p>
             </div>
           ) : null}
@@ -645,13 +655,19 @@ export function OnboardingWizard({
                   min={10}
                   step={5}
                   unit="min"
-                  value={draft.routine?.sessionMinutes ? String(draft.routine.sessionMinutes) : "45"}
+                  value={
+                    draft.routine?.sessionMinutes ? String(draft.routine.sessionMinutes) : "45"
+                  }
                   onValueChange={(value) => {
                     const minutes = Number.parseInt(value, 10);
                     update("routine.sessionMinutes", Number.isFinite(minutes) ? minutes : null);
                   }}
                 />
-                <div aria-label="Atalhos de duração" className="flex flex-wrap gap-2 pt-1" role="group">
+                <div
+                  aria-label="Atalhos de duração"
+                  className="flex flex-wrap gap-2 pt-1"
+                  role="group"
+                >
                   {[30, 45, 60, 75, 90, 120].map((mins) => {
                     const isSelected = (draft.routine?.sessionMinutes ?? 45) === mins;
                     return (
@@ -692,7 +708,9 @@ export function OnboardingWizard({
                     update("location", value);
                     if (value === "academia" || value === "academia_e_casa") {
                       const currentEquip = getValues("equipment") ?? [];
-                      const merged = Array.from(new Set([...currentEquip, ...standardGymEquipments]));
+                      const merged = Array.from(
+                        new Set([...currentEquip, ...standardGymEquipments]),
+                      );
                       update("equipment", merged);
                     }
                   }

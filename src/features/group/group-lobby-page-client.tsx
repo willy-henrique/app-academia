@@ -65,7 +65,8 @@ function getParticipantStatus(
   if (participant.status === "COMPLETED") {
     return { icon: CircleCheck, label: "Concluiu o treino", tone: "success" };
   }
-  if (participant.status === "LEFT") return { icon: LogOut, label: "Saiu do treino", tone: "neutral" };
+  if (participant.status === "LEFT")
+    return { icon: LogOut, label: "Saiu do treino", tone: "neutral" };
   if (sessionStatus !== "ACTIVE") {
     return participant.status === "READY"
       ? { icon: CircleCheck, label: "Pronto", tone: "success" }
@@ -411,7 +412,15 @@ export function GroupLobbyPageClient({ sessionId }: GroupLobbyPageClientProps) {
       <PageHeader
         actions={
           <Badge
-            icon={connectionState === "ONLINE" ? <Wifi /> : connectionState === "RECONNECTING" ? <RefreshCw /> : <CloudOff />}
+            icon={
+              connectionState === "ONLINE" ? (
+                <Wifi />
+              ) : connectionState === "RECONNECTING" ? (
+                <RefreshCw />
+              ) : (
+                <CloudOff />
+              )
+            }
             tone={connectionTone}
           >
             {connectionText}
@@ -510,13 +519,21 @@ export function GroupLobbyPageClient({ sessionId }: GroupLobbyPageClientProps) {
                     O grupo vê só isto. Carga, repetições, RIR e dados pessoais continuam privados.
                   </p>
                 </div>
-                <div aria-label="Seu status no treino" className="grid gap-2 sm:grid-cols-3" role="group">
+                <div
+                  aria-label="Seu status no treino"
+                  className="grid gap-2 sm:grid-cols-3"
+                  role="group"
+                >
                   {operationalActions.map((action) => {
                     const current = ownParticipant.operationalState === action.state;
                     return (
                       <Button
                         aria-pressed={current}
-                        className={current ? "border-wt-accent-border bg-wt-accent-subtle text-wt-accent-text" : ""}
+                        className={
+                          current
+                            ? "border-wt-accent-border bg-wt-accent-subtle text-wt-accent-text"
+                            : ""
+                        }
                         disabled={saving}
                         key={action.state}
                         size="large"
@@ -643,7 +660,11 @@ export function GroupLobbyPageClient({ sessionId }: GroupLobbyPageClientProps) {
                   <Clock3 aria-hidden="true" className="size-4" />
                   Estimativa com essa configuração: {formatDuration(duration)}
                 </p>
-                <Button loading={saving} variant="secondary" onClick={() => void saveConfiguration()}>
+                <Button
+                  loading={saving}
+                  variant="secondary"
+                  onClick={() => void saveConfiguration()}
+                >
                   Salvar configuração
                 </Button>
               </Card>
@@ -668,7 +689,9 @@ export function GroupLobbyPageClient({ sessionId }: GroupLobbyPageClientProps) {
                       <Avatar name={participant.displaySnapshot.displayName} />
                       <div className="min-w-0 flex-1">
                         <p className="flex items-center gap-1.5 text-wt-label font-semibold">
-                          <span className="truncate">{participant.displaySnapshot.displayName}</span>
+                          <span className="truncate">
+                            {participant.displaySnapshot.displayName}
+                          </span>
                           {isYou ? (
                             <span className="shrink-0 font-normal text-wt-text-secondary-strong">
                               (você)

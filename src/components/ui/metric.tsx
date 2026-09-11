@@ -44,7 +44,9 @@ export function Metric({
         {unit ? (
           <>
             {" "}
-            <span className="text-wt-label font-semibold text-wt-text-secondary-strong">{unit}</span>
+            <span className="text-wt-label font-semibold text-wt-text-secondary-strong">
+              {unit}
+            </span>
           </>
         ) : null}
         {context ? (

@@ -1,6 +1,14 @@
 "use client";
 
-import { Sparkles, Utensils, Dumbbell, ChevronDown, ChevronUp, Loader2, RefreshCw } from "lucide-react";
+import {
+  Sparkles,
+  Utensils,
+  Dumbbell,
+  ChevronDown,
+  ChevronUp,
+  Loader2,
+  RefreshCw,
+} from "lucide-react";
 import { useState } from "react";
 
 import { Button } from "@/components/ui/button";
@@ -107,7 +115,9 @@ export function AiCoachSection({ draft }: AiCoachModalProps) {
       {loading ? (
         <div className="mt-6 flex flex-col items-center justify-center gap-3 py-6 text-wt-text-secondary">
           <Loader2 className="size-6 animate-spin text-wt-accent-hover" />
-          <p className="text-xs font-semibold">Analisando sua rotina, biomecânica e gerando dieta e treino…</p>
+          <p className="text-xs font-semibold">
+            Analisando sua rotina, biomecânica e gerando dieta e treino…
+          </p>
         </div>
       ) : null}
 
@@ -161,7 +171,8 @@ export function AiCoachSection({ draft }: AiCoachModalProps) {
                         </span>
                       </div>
                       <p className="mt-1 text-xs text-wt-text-secondary-strong">
-                        <strong className="text-wt-text-primary">{ex.sets} séries</strong> × {ex.reps} reps · RIR {ex.rir} · Descanso {ex.restSeconds}s
+                        <strong className="text-wt-text-primary">{ex.sets} séries</strong> ×{" "}
+                        {ex.reps} reps · RIR {ex.rir} · Descanso {ex.restSeconds}s
                       </p>
                     </div>
                     {ex.tip ? (
@@ -178,19 +189,29 @@ export function AiCoachSection({ draft }: AiCoachModalProps) {
               <div className="grid grid-cols-4 gap-2 text-center">
                 <div className="rounded-wt-md bg-wt-surface-elevated p-2">
                   <div className="text-[0.65rem] font-bold text-wt-text-secondary">Calorias</div>
-                  <div className="text-sm font-black text-wt-text-primary">{plan.nutrition.dailyCaloriesTarget} kcal</div>
+                  <div className="text-sm font-black text-wt-text-primary">
+                    {plan.nutrition.dailyCaloriesTarget} kcal
+                  </div>
                 </div>
                 <div className="rounded-wt-md bg-wt-surface-elevated p-2">
                   <div className="text-[0.65rem] font-bold text-wt-text-secondary">Proteína</div>
-                  <div className="text-sm font-black text-wt-accent-text">{plan.nutrition.macros.proteinGrams}g</div>
+                  <div className="text-sm font-black text-wt-accent-text">
+                    {plan.nutrition.macros.proteinGrams}g
+                  </div>
                 </div>
                 <div className="rounded-wt-md bg-wt-surface-elevated p-2">
-                  <div className="text-[0.65rem] font-bold text-wt-text-secondary">Carboidratos</div>
-                  <div className="text-sm font-black text-wt-success-text">{plan.nutrition.macros.carbsGrams}g</div>
+                  <div className="text-[0.65rem] font-bold text-wt-text-secondary">
+                    Carboidratos
+                  </div>
+                  <div className="text-sm font-black text-wt-success-text">
+                    {plan.nutrition.macros.carbsGrams}g
+                  </div>
                 </div>
                 <div className="rounded-wt-md bg-wt-surface-elevated p-2">
                   <div className="text-[0.65rem] font-bold text-wt-text-secondary">Gorduras</div>
-                  <div className="text-sm font-black text-wt-warning-text">{plan.nutrition.macros.fatsGrams}g</div>
+                  <div className="text-sm font-black text-wt-warning-text">
+                    {plan.nutrition.macros.fatsGrams}g
+                  </div>
                 </div>
               </div>
 
@@ -209,10 +230,15 @@ export function AiCoachSection({ draft }: AiCoachModalProps) {
                 <h3 className="text-xs font-bold text-wt-text-primary">Sugestão de Refeições</h3>
                 <div className="grid gap-2 sm:grid-cols-2">
                   {plan.nutrition.suggestedMeals.map((meal, i) => (
-                    <div key={i} className="rounded-wt-md border border-wt-border bg-wt-surface p-2.5 text-xs">
+                    <div
+                      key={i}
+                      className="rounded-wt-md border border-wt-border bg-wt-surface p-2.5 text-xs"
+                    >
                       <div className="flex items-center justify-between font-bold text-wt-text-primary">
                         <span>{meal.meal}</span>
-                        <span className="text-[0.65rem] font-semibold text-wt-accent-text">P: {meal.protein} · C: {meal.carbs}</span>
+                        <span className="text-[0.65rem] font-semibold text-wt-accent-text">
+                          P: {meal.protein} · C: {meal.carbs}
+                        </span>
                       </div>
                       <p className="mt-1 text-wt-text-secondary">{meal.description}</p>
                     </div>

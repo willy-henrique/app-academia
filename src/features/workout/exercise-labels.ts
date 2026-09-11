@@ -35,7 +35,9 @@ export function isKnownEquipment(value: string): value is Equipment {
 }
 
 export function formatEquipment(values: readonly string[]): string {
-  return values.map((value) => (isKnownEquipment(value) ? equipmentLabels[value] : value)).join(", ");
+  return values
+    .map((value) => (isKnownEquipment(value) ? equipmentLabels[value] : value))
+    .join(", ");
 }
 
 /** "peitoral maior" → "Peitoral maior": a primeira letra em maiúscula, o resto intacto. */

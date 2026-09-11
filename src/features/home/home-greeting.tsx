@@ -42,7 +42,9 @@ export function HomeGreeting({ now }: HomeGreetingProps) {
   return (
     <PageHeader
       description={`${today[0].toLocaleUpperCase("pt-BR")}${today.slice(1)}`}
-      title={name ? `${resolveGreeting(date.getHours())}, ${name}` : resolveGreeting(date.getHours())}
+      title={
+        name ? `${resolveGreeting(date.getHours())}, ${name}` : resolveGreeting(date.getHours())
+      }
     />
   );
 }

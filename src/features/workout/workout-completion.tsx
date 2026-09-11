@@ -9,11 +9,7 @@ import { Card } from "@/components/ui/card";
 import { Metric, MetricGrid } from "@/components/ui/metric";
 import { Textarea } from "@/components/ui/textarea";
 
-import {
-  formatDurationShort,
-  formatNumber,
-  type WorkoutSessionOverview,
-} from "./workout-summary";
+import { formatDurationShort, formatNumber, type WorkoutSessionOverview } from "./workout-summary";
 
 type WorkoutCompletionProps = Readonly<{
   cardioCompleted: boolean;

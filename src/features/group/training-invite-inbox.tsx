@@ -47,7 +47,9 @@ export function TrainingInviteInbox({ onAccepted, uid }: TrainingInviteInboxProp
         } else if (next.length === 0) {
           setStatus("Nenhum convite pendente.");
         } else {
-          setStatus(`${next.length} ${next.length === 1 ? "convite pendente" : "convites pendentes"}.`);
+          setStatus(
+            `${next.length} ${next.length === 1 ? "convite pendente" : "convites pendentes"}.`,
+          );
         }
         previousCount.current = next.length;
       },

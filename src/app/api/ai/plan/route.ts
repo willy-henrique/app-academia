@@ -1,5 +1,8 @@
 import { NextResponse } from "next/server";
-import { generateCustomWorkoutAndDietPlan, type AiGenerateInput } from "@/application/ai/coach-service";
+import {
+  generateCustomWorkoutAndDietPlan,
+  type AiGenerateInput,
+} from "@/application/ai/coach-service";
 
 export async function POST(request: Request) {
   try {

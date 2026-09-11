@@ -12,10 +12,7 @@ type PlateCalculationProps = Readonly<{
  * Resolve um dos maiores problemas de quem treina pesado na academia:
  * "Quanto de anilha coloco de cada lado da barra?".
  */
-export function PlateCalculator({
-  barbellWeightKg = 20,
-  targetWeightKg,
-}: PlateCalculationProps) {
+export function PlateCalculator({ barbellWeightKg = 20, targetWeightKg }: PlateCalculationProps) {
   const calculation = useMemo(() => {
     if (targetWeightKg <= barbellWeightKg) {
       return null;
@@ -61,9 +58,7 @@ export function PlateCalculator({
         <span className="font-semibold text-wt-text-secondary">
           Anilhas por lado <span className="font-normal">(Barra {barbellWeightKg}kg)</span>:
         </span>
-        <span className="font-bold text-wt-accent-text">
-          {calculation.weightPerSide} kg / lado
-        </span>
+        <span className="font-bold text-wt-accent-text">{calculation.weightPerSide} kg / lado</span>
       </div>
 
       {/* Visual Barbell Representation */}
@@ -71,8 +66,7 @@ export function PlateCalculator({
         <div className="h-6 w-2 rounded-sm bg-slate-400" title="Trava da barra" />
         {calculation.platesPerSide.map((plate, index) => {
           const colorClass = plateColors[plate] ?? "bg-slate-500 text-white";
-          const heightClass =
-            plate >= 20 ? "h-10 w-4" : plate >= 10 ? "h-8 w-3.5" : "h-6 w-3";
+          const heightClass = plate >= 20 ? "h-10 w-4" : plate >= 10 ? "h-8 w-3.5" : "h-6 w-3";
 
           return (
             <div

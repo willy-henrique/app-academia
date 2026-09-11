@@ -187,7 +187,10 @@ export function ProgressCharts() {
               ) : null}
               <div aria-hidden="true" className="flex h-40 items-end gap-2">
                 {series.map((point, index) => (
-                  <div className="flex h-full min-w-0 flex-1 flex-col items-center justify-end gap-1" key={point.label}>
+                  <div
+                    className="flex h-full min-w-0 flex-1 flex-col items-center justify-end gap-1"
+                    key={point.label}
+                  >
                     <span className="text-[0.6875rem] font-semibold text-wt-text-secondary-strong wt-tabular">
                       {formatCompact(point.volumeKg)}
                     </span>

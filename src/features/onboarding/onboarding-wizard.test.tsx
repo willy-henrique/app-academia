@@ -27,7 +27,9 @@ describe("OnboardingWizard", () => {
     fireEvent.click(screen.getByRole("button", { name: "Começar" }));
 
     await waitFor(() => {
-      expect(screen.getByRole("heading", { name: "Qual é o seu objetivo principal?" })).toBeTruthy();
+      expect(
+        screen.getByRole("heading", { name: "Qual é o seu objetivo principal?" }),
+      ).toBeTruthy();
     });
 
     // O objetivo virou um grupo de cartões selecionáveis (radio de verdade),
@@ -57,7 +59,9 @@ describe("OnboardingWizard", () => {
       />,
     );
 
-    expect(screen.getByRole("heading", { name: "Quais equipamentos você tem à mão?" })).toBeTruthy();
+    expect(
+      screen.getByRole("heading", { name: "Quais equipamentos você tem à mão?" }),
+    ).toBeTruthy();
     // Texto livre antigo é preservado no campo "Outros equipamentos".
     expect(screen.getByDisplayValue("halteres")).toBeTruthy();
   });

@@ -144,7 +144,10 @@ export function WorkoutPageClient({ autosaveDelayMs = 550 }: WorkoutPageClientPr
   const [onboardingDraft, setOnboardingDraft] = useState<OnboardingDraft | null>(null);
   const [session, setSession] = useState<WorkoutSession | null>(null);
   const [loading, setLoading] = useState(true);
-  const [feedback, setFeedback] = useState<Feedback>({ text: "Pronto para iniciar.", tone: "info" });
+  const [feedback, setFeedback] = useState<Feedback>({
+    text: "Pronto para iniciar.",
+    tone: "info",
+  });
   const [saveState, setSaveState] = useState<"idle" | "saving" | "saved" | "error">("idle");
   const [pendingSets, setPendingSets] = useState(0);
   const [now, setNow] = useState(() => new Date());
@@ -344,7 +347,6 @@ export function WorkoutPageClient({ autosaveDelayMs = 550 }: WorkoutPageClientPr
     [activeExercise, recentResults],
   );
 
-  
   const currentOneRm = useMemo(() => {
     const l = Number.parseFloat(loadKg);
     const r = Number.parseInt(reps, 10);
@@ -365,7 +367,10 @@ export function WorkoutPageClient({ autosaveDelayMs = 550 }: WorkoutPageClientPr
   // Ao entrar em um exercício, os campos começam pela última carga usada (ou
   // mantêm a atual) e pela meta de repetições. É estado de tela, derivado
   // durante a renderização — o padrão do React para "ajustar ao mudar a prop".
-  const exerciseKey = session && activeExercise ? `${session.currentExerciseIndex}:${activeExercise.exerciseId}` : null;
+  const exerciseKey =
+    session && activeExercise
+      ? `${session.currentExerciseIndex}:${activeExercise.exerciseId}`
+      : null;
   if (exerciseKey && exerciseKey !== prefilledKey && activeExercise) {
     setPrefilledKey(exerciseKey);
     if (lastResult && lastResult.loadKg > 0) {
@@ -730,7 +735,9 @@ export function WorkoutPageClient({ autosaveDelayMs = 550 }: WorkoutPageClientPr
             recoveryFeedback={recoveryFeedback}
             onRecoveryFeedbackChange={(value) => {
               setRecoveryFeedback(value);
-              setSession((current) => (current ? { ...current, recoveryFeedback: value } : current));
+              setSession((current) =>
+                current ? { ...current, recoveryFeedback: value } : current,
+              );
             }}
           />
         </div>
@@ -738,271 +745,272 @@ export function WorkoutPageClient({ autosaveDelayMs = 550 }: WorkoutPageClientPr
         <div className="space-y-6">
           <AiCoachSection draft={onboardingDraft} />
           <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_19rem] lg:items-start">
-          <div className="min-w-0 space-y-4">
-            {awaitingFinish ? (
-              <Card as="div" className="space-y-5 p-5 sm:p-7" elevated>
-                <div className="space-y-2">
-                  <span className="grid size-12 place-items-center rounded-wt-full bg-wt-success-subtle text-wt-success-text">
-                    <CircleCheck aria-hidden="true" className="size-7" />
-                  </span>
-                  <h2 className="wt-text-h1">Musculação concluída</h2>
-                  <p className="text-wt-body-sm text-wt-text-secondary-strong">
-                    Cardio é opcional. Encerre agora ou registre que também fez cardio — as duas
-                    opções contam o treino de força.
-                  </p>
-                </div>
-                <div className="grid gap-2 sm:flex">
-                  <Button
-                    loading={actionLoading}
-                    loadingLabel="Salvando"
-                    size="xl"
-                    onClick={() => void handleFinish("SKIPPED")}
-                  >
-                    Concluir sem cardio
-                  </Button>
-                  <Button
-                    loading={actionLoading}
-                    loadingLabel="Salvando"
-                    size="xl"
-                    variant="secondary"
-                    onClick={() => void handleFinish("COMPLETED")}
-                  >
-                    Fiz cardio também
-                  </Button>
-                </div>
-              </Card>
-            ) : null}
+            <div className="min-w-0 space-y-4">
+              {awaitingFinish ? (
+                <Card as="div" className="space-y-5 p-5 sm:p-7" elevated>
+                  <div className="space-y-2">
+                    <span className="grid size-12 place-items-center rounded-wt-full bg-wt-success-subtle text-wt-success-text">
+                      <CircleCheck aria-hidden="true" className="size-7" />
+                    </span>
+                    <h2 className="wt-text-h1">Musculação concluída</h2>
+                    <p className="text-wt-body-sm text-wt-text-secondary-strong">
+                      Cardio é opcional. Encerre agora ou registre que também fez cardio — as duas
+                      opções contam o treino de força.
+                    </p>
+                  </div>
+                  <div className="grid gap-2 sm:flex">
+                    <Button
+                      loading={actionLoading}
+                      loadingLabel="Salvando"
+                      size="xl"
+                      onClick={() => void handleFinish("SKIPPED")}
+                    >
+                      Concluir sem cardio
+                    </Button>
+                    <Button
+                      loading={actionLoading}
+                      loadingLabel="Salvando"
+                      size="xl"
+                      variant="secondary"
+                      onClick={() => void handleFinish("COMPLETED")}
+                    >
+                      Fiz cardio também
+                    </Button>
+                  </div>
+                </Card>
+              ) : null}
 
-            {activeExercise && resting ? (
-              <RestTimer
-                disabled={actionLoading}
-                elapsedSeconds={currentRest.elapsedSeconds}
-                nextLabel={nextLabel}
-                remainingSeconds={currentRest.remainingSeconds}
-                onAdjust={handleAdjustRest}
-                onSkip={handleSkipRest}
-              />
-            ) : null}
-            {/*
+              {activeExercise && resting ? (
+                <RestTimer
+                  disabled={actionLoading}
+                  elapsedSeconds={currentRest.elapsedSeconds}
+                  nextLabel={nextLabel}
+                  remainingSeconds={currentRest.remainingSeconds}
+                  onAdjust={handleAdjustRest}
+                  onSkip={handleSkipRest}
+                />
+              ) : null}
+              {/*
               O número do descanso muda a cada segundo: anunciá-lo inundaria o
               leitor de tela. Só a mudança de estado é anunciada.
             */}
-            {activeExercise ? (
-              <p className="sr-only" role="timer">
-                {currentRest.ready
-                  ? "Descanso concluído. Você pode iniciar a próxima série."
-                  : `Descanso em andamento: faltam ${currentRest.remainingSeconds} segundos.`}
-              </p>
-            ) : null}
+              {activeExercise ? (
+                <p className="sr-only" role="timer">
+                  {currentRest.ready
+                    ? "Descanso concluído. Você pode iniciar a próxima série."
+                    : `Descanso em andamento: faltam ${currentRest.remainingSeconds} segundos.`}
+                </p>
+              ) : null}
 
-            {activeExercise && prescription ? (
-              <Card as="div" className="space-y-5 p-4 sm:p-6" elevated>
-                <div className="space-y-3">
-                  <div className="flex items-start justify-between gap-3">
-                    <div className="min-w-0">
-                      <h2 className="text-[1.625rem] font-extrabold leading-tight tracking-[-0.03em] sm:text-3xl">
-                        {activeExercise.exerciseName}
-                      </h2>
-                      {exerciseDetails ? (
-                        <p className="mt-1 text-wt-body-sm text-wt-text-secondary-strong">
-                          {capitalize(exerciseDetails.primaryMuscles.join(", "))}
-                          {exerciseDetails.equipment.length > 0
-                            ? ` · ${formatEquipment(exerciseDetails.equipment)}`
-                            : ""}
-                        </p>
-                      ) : null}
-                    </div>
-                    {setConfirmation ? (
-                      <Badge
-                        className="wt-pop-in shrink-0"
-                        icon={<CircleCheck />}
-                        role="status"
-                        tone="success"
-                      >
-                        {setConfirmation}
-                      </Badge>
-                    ) : null}
-                  </div>
-
-                  <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
-                    <p className="text-lg font-bold wt-tabular">
-                      Série {setNumber} de {prescription.sets}
-                    </p>
-                    <ol aria-hidden="true" className="flex gap-1.5">
-                      {Array.from({ length: prescription.sets }, (_, index) => (
-                        <li
-                          className={`h-2 w-6 rounded-wt-full ${
-                            index < activeExercise.completedSets
-                              ? "bg-wt-success"
-                              : index === activeExercise.completedSets
-                                ? "bg-wt-accent-hover"
-                                : "bg-wt-border"
-                          }`}
-                          key={index}
-                        />
-                      ))}
-                    </ol>
-                  </div>
-                  <p className="text-wt-body-sm text-wt-text-secondary-strong wt-tabular">
-                    Meta: {repsTarget} repetições
-                    {prescription.rirTarget !== null ? ` · RIR ${prescription.rirTarget}` : ""} ·
-                    descanso {prescription.restSeconds}s
-                  </p>
-                </div>
-
-                <form
-                  className="space-y-4"
-                  onSubmit={(event) => {
-                    event.preventDefault();
-                    void handleCompleteSet();
-                  }}
-                >
-                  <div className="grid gap-4 sm:grid-cols-2">
-                    <NumberStepper
-                      decimals={1}
-                      label="Carga"
-                      size="large"
-                      step={2.5}
-                      unit="kg"
-                      value={loadKg}
-                      onValueChange={setLoadKg}
-                    />
-                    <NumberStepper
-                      label="Repetições"
-                      min={1}
-                      size="large"
-                      step={1}
-                      value={reps}
-                      onValueChange={setReps}
-                    />
-                  </div>
-
-                  {/* Calculadora visual de anilhas para exercícios com barra livre */}
-                  {Boolean(exerciseDetails?.equipment?.includes("barbell")) || Number.parseFloat(loadKg) >= 25 ? (
-                    <PlateCalculator targetWeightKg={Number.parseFloat(loadKg) || 0} />
-                  ) : null}
-                  <NumberStepper
-                    className="sm:max-w-[calc(50%-0.5rem)]"
-                    hint="Repetições que ainda sobravam no final da série."
-                    label="RIR"
-                    max={10}
-                    step={1}
-                    value={rir}
-                    onValueChange={setRir}
-                  />
-
-                  {lastResult ? (
-                    <div className="flex items-center justify-between gap-3 rounded-wt-lg bg-wt-surface-elevated px-4 py-2.5">
-                      <p className="flex min-w-0 items-center gap-2 text-wt-body-sm text-wt-text-secondary-strong">
-                        <History aria-hidden="true" className="size-4 shrink-0" />
-                        <span className="truncate">
-                          Última vez:{" "}
-                          <strong className="font-semibold text-wt-text-primary wt-tabular">
-                            {formatKg(lastResult.loadKg)} × {lastResult.reps}
-                          </strong>
-                          {lastResult.rir !== null ? ` · RIR ${lastResult.rir}` : ""}
-                        </span>
-                      </p>
-                      {canRepeatLast ? (
-                        <Button
-                          className="shrink-0"
-                          variant="ghost"
-                          onClick={() => {
-                            setLoadKg(String(lastResult.loadKg));
-                            setReps(String(lastResult.reps));
-                          }}
+              {activeExercise && prescription ? (
+                <Card as="div" className="space-y-5 p-4 sm:p-6" elevated>
+                  <div className="space-y-3">
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="min-w-0">
+                        <h2 className="text-[1.625rem] font-extrabold leading-tight tracking-[-0.03em] sm:text-3xl">
+                          {activeExercise.exerciseName}
+                        </h2>
+                        {exerciseDetails ? (
+                          <p className="mt-1 text-wt-body-sm text-wt-text-secondary-strong">
+                            {capitalize(exerciseDetails.primaryMuscles.join(", "))}
+                            {exerciseDetails.equipment.length > 0
+                              ? ` · ${formatEquipment(exerciseDetails.equipment)}`
+                              : ""}
+                          </p>
+                        ) : null}
+                      </div>
+                      {setConfirmation ? (
+                        <Badge
+                          className="wt-pop-in shrink-0"
+                          icon={<CircleCheck />}
+                          role="status"
+                          tone="success"
                         >
-                          Repetir
-                        </Button>
+                          {setConfirmation}
+                        </Badge>
                       ) : null}
                     </div>
-                  ) : null}
 
-                  <Disclosure icon={<MessageSquarePlus />} summary="Adicionar observação">
-                    <div className="grid gap-4">
-                      <Input
-                        label="Observação"
-                        maxLength={500}
-                        value={setNotes}
-                        onChange={(event) => setSetNotes(event.target.value)}
+                    <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
+                      <p className="text-lg font-bold wt-tabular">
+                        Série {setNumber} de {prescription.sets}
+                      </p>
+                      <ol aria-hidden="true" className="flex gap-1.5">
+                        {Array.from({ length: prescription.sets }, (_, index) => (
+                          <li
+                            className={`h-2 w-6 rounded-wt-full ${
+                              index < activeExercise.completedSets
+                                ? "bg-wt-success"
+                                : index === activeExercise.completedSets
+                                  ? "bg-wt-accent-hover"
+                                  : "bg-wt-border"
+                            }`}
+                            key={index}
+                          />
+                        ))}
+                      </ol>
+                    </div>
+                    <p className="text-wt-body-sm text-wt-text-secondary-strong wt-tabular">
+                      Meta: {repsTarget} repetições
+                      {prescription.rirTarget !== null ? ` · RIR ${prescription.rirTarget}` : ""} ·
+                      descanso {prescription.restSeconds}s
+                    </p>
+                  </div>
+
+                  <form
+                    className="space-y-4"
+                    onSubmit={(event) => {
+                      event.preventDefault();
+                      void handleCompleteSet();
+                    }}
+                  >
+                    <div className="grid gap-4 sm:grid-cols-2">
+                      <NumberStepper
+                        decimals={1}
+                        label="Carga"
+                        size="large"
+                        step={2.5}
+                        unit="kg"
+                        value={loadKg}
+                        onValueChange={setLoadKg}
                       />
-                      <Textarea
-                        id="set-feedback"
-                        label="Feedback da série"
-                        maxLength={500}
-                        placeholder="Ex.: senti o ombro na descida"
-                        value={setFeedbackText}
-                        onChange={(event) => setSetFeedbackText(event.target.value)}
+                      <NumberStepper
+                        label="Repetições"
+                        min={1}
+                        size="large"
+                        step={1}
+                        value={reps}
+                        onValueChange={setReps}
                       />
                     </div>
-                  </Disclosure>
 
-                  {/*
+                    {/* Calculadora visual de anilhas para exercícios com barra livre */}
+                    {Boolean(exerciseDetails?.equipment?.includes("barbell")) ||
+                    Number.parseFloat(loadKg) >= 25 ? (
+                      <PlateCalculator targetWeightKg={Number.parseFloat(loadKg) || 0} />
+                    ) : null}
+                    <NumberStepper
+                      className="sm:max-w-[calc(50%-0.5rem)]"
+                      hint="Repetições que ainda sobravam no final da série."
+                      label="RIR"
+                      max={10}
+                      step={1}
+                      value={rir}
+                      onValueChange={setRir}
+                    />
+
+                    {lastResult ? (
+                      <div className="flex items-center justify-between gap-3 rounded-wt-lg bg-wt-surface-elevated px-4 py-2.5">
+                        <p className="flex min-w-0 items-center gap-2 text-wt-body-sm text-wt-text-secondary-strong">
+                          <History aria-hidden="true" className="size-4 shrink-0" />
+                          <span className="truncate">
+                            Última vez:{" "}
+                            <strong className="font-semibold text-wt-text-primary wt-tabular">
+                              {formatKg(lastResult.loadKg)} × {lastResult.reps}
+                            </strong>
+                            {lastResult.rir !== null ? ` · RIR ${lastResult.rir}` : ""}
+                          </span>
+                        </p>
+                        {canRepeatLast ? (
+                          <Button
+                            className="shrink-0"
+                            variant="ghost"
+                            onClick={() => {
+                              setLoadKg(String(lastResult.loadKg));
+                              setReps(String(lastResult.reps));
+                            }}
+                          >
+                            Repetir
+                          </Button>
+                        ) : null}
+                      </div>
+                    ) : null}
+
+                    <Disclosure icon={<MessageSquarePlus />} summary="Adicionar observação">
+                      <div className="grid gap-4">
+                        <Input
+                          label="Observação"
+                          maxLength={500}
+                          value={setNotes}
+                          onChange={(event) => setSetNotes(event.target.value)}
+                        />
+                        <Textarea
+                          id="set-feedback"
+                          label="Feedback da série"
+                          maxLength={500}
+                          placeholder="Ex.: senti o ombro na descida"
+                          value={setFeedbackText}
+                          onChange={(event) => setSetFeedbackText(event.target.value)}
+                        />
+                      </div>
+                    </Disclosure>
+
+                    {/*
                     CTA fixo acima da navegação inferior no celular: sempre ao
                     alcance do polegar, sem cobrir o conteúdo quando parado.
                   */}
-                  <div className="sticky bottom-[calc(var(--wt-mobile-nav-height)+env(safe-area-inset-bottom)+0.5rem)] z-[var(--wt-z-sticky)] -mx-1 rounded-wt-lg bg-wt-surface/95 p-1 backdrop-blur-sm lg:static lg:bg-transparent lg:p-0">
+                    <div className="sticky bottom-[calc(var(--wt-mobile-nav-height)+env(safe-area-inset-bottom)+0.5rem)] z-[var(--wt-z-sticky)] -mx-1 rounded-wt-lg bg-wt-surface/95 p-1 backdrop-blur-sm lg:static lg:bg-transparent lg:p-0">
+                      <Button
+                        className="w-full"
+                        loading={actionLoading}
+                        loadingLabel="Salvando série"
+                        size="xl"
+                        type="submit"
+                      >
+                        Concluir série
+                      </Button>
+                    </div>
+                  </form>
+
+                  <div className="flex flex-wrap gap-2 border-t border-wt-border pt-4">
                     <Button
-                      className="w-full"
-                      loading={actionLoading}
-                      loadingLabel="Salvando série"
-                      size="xl"
-                      type="submit"
+                      disabled={actionLoading || !swapReplacement}
+                      variant="ghost"
+                      onClick={() => void handleSwap()}
                     >
-                      Concluir série
+                      <Repeat2 aria-hidden="true" className="size-4" />
+                      {swapReplacement ? `Trocar por ${swapReplacement.label}` : "Trocar exercício"}
                     </Button>
                   </div>
-                </form>
+                </Card>
+              ) : null}
 
-                <div className="flex flex-wrap gap-2 border-t border-wt-border pt-4">
-                  <Button
-                    disabled={actionLoading || !swapReplacement}
-                    variant="ghost"
-                    onClick={() => void handleSwap()}
-                  >
-                    <Repeat2 aria-hidden="true" className="size-4" />
-                    {swapReplacement ? `Trocar por ${swapReplacement.label}` : "Trocar exercício"}
-                  </Button>
-                </div>
+              {activeExercise && exerciseDetails ? (
+                <Disclosure icon={<BookOpen />} summary="Como executar">
+                  <div className="space-y-4">
+                    <ExerciseMedia exercise={exerciseDetails} />
+                    <dl className="m-0 grid gap-3 text-wt-body-sm">
+                      {[
+                        ["Passo a passo", exerciseDetails.instructions],
+                        ["Preparação", exerciseDetails.setup],
+                        ["Execução", exerciseDetails.execution],
+                        ["Respiração", exerciseDetails.breathing],
+                        ["Evite", exerciseDetails.mistakes],
+                        ["Segurança", exerciseDetails.safetyNotes],
+                      ].map(([term, description]) => (
+                        <div key={term}>
+                          <dt className="font-semibold text-wt-text-primary">{term}</dt>
+                          <dd className="m-0 text-wt-text-secondary-strong">{description}</dd>
+                        </div>
+                      ))}
+                    </dl>
+                  </div>
+                </Disclosure>
+              ) : null}
+            </div>
+
+            <aside aria-label="Sequência do treino" className="hidden lg:sticky lg:top-6 lg:block">
+              <Card as="div" className="p-2">
+                <p className="px-3 pb-1 pt-2 text-wt-label font-semibold text-wt-text-secondary-strong">
+                  Sequência
+                </p>
+                <ExerciseQueue
+                  activeIndex={activeExercise ? session.currentExerciseIndex : null}
+                  queue={session.exerciseQueue}
+                />
               </Card>
-            ) : null}
-
-            {activeExercise && exerciseDetails ? (
-              <Disclosure icon={<BookOpen />} summary="Como executar">
-                <div className="space-y-4">
-                  <ExerciseMedia exercise={exerciseDetails} />
-                  <dl className="m-0 grid gap-3 text-wt-body-sm">
-                    {[
-                      ["Passo a passo", exerciseDetails.instructions],
-                      ["Preparação", exerciseDetails.setup],
-                      ["Execução", exerciseDetails.execution],
-                      ["Respiração", exerciseDetails.breathing],
-                      ["Evite", exerciseDetails.mistakes],
-                      ["Segurança", exerciseDetails.safetyNotes],
-                    ].map(([term, description]) => (
-                      <div key={term}>
-                        <dt className="font-semibold text-wt-text-primary">{term}</dt>
-                        <dd className="m-0 text-wt-text-secondary-strong">{description}</dd>
-                      </div>
-                    ))}
-                  </dl>
-                </div>
-              </Disclosure>
-            ) : null}
+            </aside>
           </div>
-
-          <aside aria-label="Sequência do treino" className="hidden lg:sticky lg:top-6 lg:block">
-            <Card as="div" className="p-2">
-              <p className="px-3 pb-1 pt-2 text-wt-label font-semibold text-wt-text-secondary-strong">
-                Sequência
-              </p>
-              <ExerciseQueue
-                activeIndex={activeExercise ? session.currentExerciseIndex : null}
-                queue={session.exerciseQueue}
-              />
-            </Card>
-          </aside>
-        </div>
         </div>
       )}
 
