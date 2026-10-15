@@ -1,6 +1,6 @@
 "use client";
 
-import { VideoOff } from "lucide-react";
+import { ExternalLink, VideoOff } from "lucide-react";
 import { useState } from "react";
 
 import type { Exercise } from "@/domain/workout/exercise";
@@ -103,9 +103,18 @@ export function ExerciseMedia({ exercise }: ExerciseMediaProps) {
       ) : (
         <div className="flex items-center gap-3 rounded-wt-lg bg-wt-surface-elevated px-4 py-3 text-wt-body-sm text-wt-text-secondary-strong">
           <VideoOff aria-hidden="true" className="size-5 shrink-0 text-wt-text-secondary" />
-          <span>Vídeo em preparação. Siga a descrição passo a passo abaixo.</span>
+          <span>Vídeo indisponível agora. Siga a descrição passo a passo abaixo.</span>
         </div>
       )}
+      <a
+        className="inline-flex min-h-11 items-center gap-2 rounded-wt-md text-wt-label font-semibold text-wt-accent-text hover:underline"
+        href={`https://www.youtube.com/results?search_query=${encodeURIComponent(`${exercise.name} execução correta`)}`}
+        rel="noopener noreferrer"
+        target="_blank"
+      >
+        <ExternalLink aria-hidden="true" className="size-4" />
+        {playable ? "Ver mais demonstrações no YouTube" : "Buscar demonstração no YouTube"}
+      </a>
       <figcaption className="text-wt-body-sm text-wt-text-secondary-strong">
         {exercise.accessibleDescription}
       </figcaption>

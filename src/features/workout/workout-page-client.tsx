@@ -987,7 +987,7 @@ export function WorkoutPageClient({ autosaveDelayMs = 550 }: WorkoutPageClientPr
               ) : null}
 
               {activeExercise && exerciseDetails ? (
-                <Disclosure icon={<BookOpen />} summary="Como executar">
+                <Disclosure defaultOpen icon={<BookOpen />} summary="Como executar">
                   <div className="space-y-4">
                     <ExerciseMedia exercise={exerciseDetails} />
                     <dl className="m-0 grid gap-3 text-wt-body-sm">
