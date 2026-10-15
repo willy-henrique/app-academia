@@ -9,6 +9,7 @@ import { authCopy } from "./auth-copy";
 import { isLocalDevelopmentAuthEnabled } from "./local-development-auth";
 import {
   GoogleAccountConflictError,
+  GoogleAuthError,
   signInWithGoogle,
   type GoogleSignInResult,
 } from "./google-auth";
@@ -39,7 +40,9 @@ export function GoogleSignInButton({
       setMessage(
         error instanceof GoogleAccountConflictError
           ? authCopy.googleConflictGuidance
-          : authCopy.genericGoogleFailure,
+          : error instanceof GoogleAuthError
+            ? error.message
+            : authCopy.genericGoogleFailure,
       );
     } finally {
       setIsLoading(false);

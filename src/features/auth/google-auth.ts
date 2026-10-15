@@ -28,10 +28,30 @@ export class GoogleAccountConflictError extends Error {
   }
 }
 
+const googleFailureCopy: Record<string, string> = {
+  "auth/popup-closed-by-user": "A janela do Google foi fechada antes de concluir. Tente de novo.",
+  "auth/cancelled-popup-request":
+    "Já existe uma janela do Google aberta. Conclua nela ou tente de novo.",
+  "auth/network-request-failed": "Sem conexão com o Google. Verifique a internet e tente de novo.",
+  "auth/unauthorized-domain":
+    "Este endereço ainda não está autorizado para entrar com Google. Fale com o suporte.",
+  "auth/operation-not-allowed":
+    "O login com Google não está ativado neste app. Fale com o suporte.",
+};
+
 export class GoogleAuthError extends Error {
-  constructor() {
-    super(authCopy.genericGoogleFailure);
+  readonly code: string | undefined;
+
+  constructor(code?: string) {
+    const known = code ? googleFailureCopy[code] : undefined;
+    super(
+      known ??
+        (code
+          ? `${authCopy.genericGoogleFailure} (código: ${code})`
+          : authCopy.genericGoogleFailure),
+    );
     this.name = "GoogleAuthError";
+    this.code = code;
   }
 }
 
@@ -66,6 +86,7 @@ export async function signInWithGoogle(): Promise<GoogleSignInResult> {
       return "REDIRECT_STARTED";
     }
 
-    throw new GoogleAuthError();
+    console.error("[google-auth] falha no login com Google:", code ?? error);
+    throw new GoogleAuthError(code);
   }
 }
