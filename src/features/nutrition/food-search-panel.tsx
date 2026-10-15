@@ -1,7 +1,7 @@
 "use client";
 
 import { Info, NotebookPen, Plus, Search } from "lucide-react";
-import { FormEvent, useState } from "react";
+import { FormEvent, type ReactNode, useState } from "react";
 
 import type { Food } from "@/domain/nutrition/food";
 import { estimateDefaultServingNutrition } from "@/domain/nutrition/food";
@@ -21,6 +21,7 @@ type FoodSearchPanelProps = Readonly<{
   entries?: readonly FoodLogEntry[];
   onAddFood?: (food: Food) => Promise<void>;
   provider?: FoodProvider;
+  recipeContent?: ReactNode;
 }>;
 
 const mealLabels: Record<FoodLogEntry["meal"], string> = {
@@ -157,6 +158,7 @@ export function FoodSearchPanel({
   entries = [],
   onAddFood,
   provider = defaultProvider,
+  recipeContent,
 }: FoodSearchPanelProps) {
   const [query, setQuery] = useState("");
   const [results, setResults] = useState<readonly Food[] | null>(null);
@@ -266,6 +268,7 @@ export function FoodSearchPanel({
         </div>
         {onAddFood ? <FoodLogHistory entries={entries} /> : null}
       </div>
+      {recipeContent ? <div className="border-t border-wt-border pt-8">{recipeContent}</div> : null}
     </main>
   );
 }

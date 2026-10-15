@@ -62,8 +62,26 @@ describe("CardioPageClient", () => {
     });
     expect(screen.getByText("Cardio concluído e somado à sua semana.")).toBeTruthy();
     expect(saveCardioSession).toHaveBeenLastCalledWith(
-      expect.objectContaining({ durationSeconds: 900, status: "COMPLETED" }),
+      expect.objectContaining({ durationSeconds: 1, status: "COMPLETED" }),
     );
+  });
+
+  it("uses a manually adjusted duration when finishing cardio", async () => {
+    render(<CardioPageClient />);
+
+    fireEvent.click(screen.getByRole("button", { name: "Iniciar cardio" }));
+    await waitFor(() => {
+      expect(screen.getByRole("button", { name: "Concluir cardio" })).toBeTruthy();
+    });
+
+    fireEvent.change(screen.getByLabelText("Duração feita"), { target: { value: "20" } });
+    fireEvent.click(screen.getByRole("button", { name: "Concluir cardio" }));
+
+    await waitFor(() => {
+      expect(saveCardioSession).toHaveBeenLastCalledWith(
+        expect.objectContaining({ durationSeconds: 1200, status: "COMPLETED" }),
+      );
+    });
   });
 
   it("resumes an active cardio session after page reload", async () => {

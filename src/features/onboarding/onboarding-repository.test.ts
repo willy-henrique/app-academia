@@ -58,6 +58,26 @@ describe("onboarding repository", () => {
     });
   });
 
+  it("restores onboarding even when the account profile is still partial", async () => {
+    getFirebaseClientServices.mockReturnValue({ firestore: "firestore" });
+    doc.mockReturnValue("privateProfiles/alice");
+    getDoc.mockResolvedValue({
+      data: () => ({
+        onboarding: {
+          ...createDefaultOnboardingDraft(),
+          currentStepId: "summary",
+          summaryAcknowledged: true,
+        },
+      }),
+      exists: () => true,
+    });
+
+    await expect(loadOnboardingDraft("alice")).resolves.toMatchObject({
+      currentStepId: "summary",
+      summaryAcknowledged: true,
+    });
+  });
+
   it("saves a normalized onboarding draft into the private profile", async () => {
     getFirebaseClientServices.mockReturnValue({ firestore: "firestore" });
     doc.mockReturnValue("privateProfiles/alice");

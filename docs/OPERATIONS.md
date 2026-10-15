@@ -16,7 +16,7 @@ O toolchain roda no WSL Ubuntu: `node_modules` é symlink para o cache em `/home
 2. `npm run lint`
 3. `npm run typecheck`
 4. `npm test`
-5. `npm run test:emulator` (exige JDK 21)
+5. `npm run test:emulator` (exige Node 22 e JDK 21)
 6. `npm run build`
 7. `firebase deploy --only firestore:rules,firestore:indexes,storage,functions,hosting`
 8. `npm run smoke -- https://<url-do-deploy>`

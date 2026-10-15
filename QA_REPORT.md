@@ -13,13 +13,15 @@
 A auditoria completa de QA realizada no **WillTreino** combinou análise estática de código (White-box), inspeção de regras de segurança do Firestore (`firestore.rules`), testes dinâmicos de ponta a ponta (E2E) no navegador real através do Chromium DevTools Protocol (CDP), testes de estresse em viewport mobile/desktop e monitoramento de requests HTTP e console errors.
 
 ### Destaques Positivos:
+
 - **Design System & Acessibilidade:** Excelente trabalho de contraste WCAG AA/AAA, suporte a reduced motion, tipografia com tabular-nums e ausência de horizontal overflow em viewports de 320px a 1920px.
 - **Local-first & Offline:** A engine de treino e o timer persistem em storage local e sincronizam em lote, evitando perda de dados no meio da musculação caso a conexão caia.
 - **Zero-cost Streaming:** Uso disciplinado de YouTube nocookie para vídeos, sem estourar limites de banda do Firebase Storage.
 
 ### Vulnerabilidades e Falhas Críticas Encontradas:
+
 1. **[P0] Ausência de Auto-provisionamento de Identidade Pública:** Usuários recém-cadastrados no Firebase Auth não possuem documento criado em `publicProfiles/{uid}` nem em `publicUserIdIndex`, pois o gatilho `auth.user().onCreate` só roda em Cloud Functions na nuvem (quando implantado). Ao logar em produção e acessar `/account` ou `/workout`, o endpoint `/api/me/public-profile` responde **404 (Not Found)** ou a query de convites falha, exibindo alertas vermelhos permanentes de erro para o usuário.
-2. **[P1] Quebra na Consulta de Histórico Recente (`/progress`):** A página de Evolução falha ao carregar os gráficos de volume e recordes pessoais com o erro *"Não conseguimos carregar sua evolução"*. A causa raiz é a query em `history-repository.ts` exigindo índice composto (`ownerUid ASC + status ASC + completedAt DESC`), enquanto o `firestore.indexes.json` possui apenas `completedAt ASC`.
+2. **[P1] Quebra na Consulta de Histórico Recente (`/progress`):** A página de Evolução falha ao carregar os gráficos de volume e recordes pessoais com o erro _"Não conseguimos carregar sua evolução"_. A causa raiz é a query em `history-repository.ts` exigindo índice composto (`ownerUid ASC + status ASC + completedAt DESC`), enquanto o `firestore.indexes.json` possui apenas `completedAt ASC`.
 3. **[P1] Falha de Submissão na Inscrição por Falta de Tratamento de Erro do Firebase Auth na Vercel:** Quando o usuário tenta registrar com credenciais inválidas ou já existentes, o frontend às vezes engole o código original ou expõe mensagens genéricas que desorientam o usuário.
 4. **[P2] Incompatibilidade do Service Account no Firebase Admin SDK v14:** A chamada `cert(serviceAccount)` exige a propriedade `projectId` embutida no objeto de credencial.
 5. **[P2] Falta de Validação de Input Numérico no Onboarding:** Os campos de altura e peso aceitam valores negativos (ex: `-10`) no formulário sem travar o avanço pelo cliente.
@@ -64,29 +66,30 @@ A auditoria completa de QA realizada no **WillTreino** combinou análise estáti
 
 ## 5. Matriz de Cobertura
 
-| Área | Funcionalidade | Testada | Status | Bugs / Observações |
-| :--- | :--- | :---: | :---: | :--- |
-| **Auth** | Cadastro de Nova Conta | Sim | Parcial | Mensagens genéricas quando email já existe |
-| **Auth** | Login com E-mail e Senha | Sim | OK | Redirecionamento e persistência de sessão OK |
-| **Auth** | Recuperação de Senha | Sim | OK | Retorno neutro contra enumeração de emails |
-| **Auth** | Controle de Acesso / AuthGate | Sim | OK | Bloqueia rotas protegidas sem vazamento |
-| **Onboarding** | Wizard de 14 Etapas | Sim | Problemas | BUG-003 (Aceita valores negativos de altura/peso) |
-| **Identidade** | Perfil Público & WillTreino ID | Sim | Problemas | BUG-001 (404 em usuários novos sem trigger na nuvem) |
-| **Treino** | Execução de Séries & Cargas | Sim | OK | Autosave local-first resiliente |
-| **Treino** | Cronômetro de Descanso | Sim | OK | Baseado em timestamps (imune a background throttling) |
-| **Treino** | Troca de Exercício (Swap) | Sim | OK | Substitui corretamente pela alternativa biomecânica |
-| **Treino** | WillCoach (IA Groq) | Sim | OK | Gera periodização e macros estruturados |
-| **Cardio** | Sessão de Cardio Independente | Sim | OK | Registro isolado da força |
-| **Nutrição** | Busca e Registro de Alimentos | Sim | OK | Filtro correto e cálculo por porção |
-| **Evolução** | Gráficos de Volume & PRs | Sim | Problemas | BUG-002 (Erro 500/Firestore index missing) |
-| **Social** | Convites de Treino & Grupos | Sim | Problemas | BUG-004 (Query de convites falha se perfil ausente) |
-| **Segurança** | Regras do Firestore (LGPD) | Sim | OK | Medidas e dados sensíveis blindados contra terceiros |
+| Área           | Funcionalidade                 | Testada |  Status   | Bugs / Observações                                    |
+| :------------- | :----------------------------- | :-----: | :-------: | :---------------------------------------------------- |
+| **Auth**       | Cadastro de Nova Conta         |   Sim   |  Parcial  | Mensagens genéricas quando email já existe            |
+| **Auth**       | Login com E-mail e Senha       |   Sim   |    OK     | Redirecionamento e persistência de sessão OK          |
+| **Auth**       | Recuperação de Senha           |   Sim   |    OK     | Retorno neutro contra enumeração de emails            |
+| **Auth**       | Controle de Acesso / AuthGate  |   Sim   |    OK     | Bloqueia rotas protegidas sem vazamento               |
+| **Onboarding** | Wizard de 14 Etapas            |   Sim   | Problemas | BUG-003 (Aceita valores negativos de altura/peso)     |
+| **Identidade** | Perfil Público & WillTreino ID |   Sim   | Problemas | BUG-001 (404 em usuários novos sem trigger na nuvem)  |
+| **Treino**     | Execução de Séries & Cargas    |   Sim   |    OK     | Autosave local-first resiliente                       |
+| **Treino**     | Cronômetro de Descanso         |   Sim   |    OK     | Baseado em timestamps (imune a background throttling) |
+| **Treino**     | Troca de Exercício (Swap)      |   Sim   |    OK     | Substitui corretamente pela alternativa biomecânica   |
+| **Treino**     | WillCoach (IA Groq)            |   Sim   |    OK     | Gera periodização e macros estruturados               |
+| **Cardio**     | Sessão de Cardio Independente  |   Sim   |    OK     | Registro isolado da força                             |
+| **Nutrição**   | Busca e Registro de Alimentos  |   Sim   |    OK     | Filtro correto e cálculo por porção                   |
+| **Evolução**   | Gráficos de Volume & PRs       |   Sim   | Problemas | BUG-002 (Erro 500/Firestore index missing)            |
+| **Social**     | Convites de Treino & Grupos    |   Sim   | Problemas | BUG-004 (Query de convites falha se perfil ausente)   |
+| **Segurança**  | Regras do Firestore (LGPD)     |   Sim   |    OK     | Medidas e dados sensíveis blindados contra terceiros  |
 
 ---
 
 ## 6. Bugs P0 (Críticos)
 
 ### BUG-001 — Usuário Novo Fica Sem WillTreino ID e Rota `/api/me/public-profile` Retorna 404
+
 - **Categoria:** Functional / Backend Integration
 - **Severidade:** P0 — CRÍTICO
 - **Status:** CONFIRMADO
@@ -97,9 +100,9 @@ A auditoria completa de QA realizada no **WillTreino** combinou análise estáti
   1. Acessar `/signup`.
   2. Cadastrar novo email e senha válidos.
   3. Ao ser redirecionado para `/onboarding` ou navegar para `/account`.
-  4. Observar o card *"Meu WillTreino ID"*.
+  4. Observar o card _"Meu WillTreino ID"_.
 - **Resultado esperado:** O usuário deve visualizar seu WillTreino ID gerado automaticamente (ex: `WT-GQ3B-A5CL`) e status "Conta ativa".
-- **Resultado atual:** Exibe alerta vermelho *"Não foi possível carregar seu perfil público agora."*. A requisição `GET /api/me/public-profile` responde HTTP 404.
+- **Resultado atual:** Exibe alerta vermelho _"Não foi possível carregar seu perfil público agora."_. A requisição `GET /api/me/public-profile` responde HTTP 404.
 - **Frequência:** 5/5 tentativas em contas novas.
 - **Evidência:** `GET https://app-academia-omega.vercel.app/api/me/public-profile 404 (Not Found)`.
 - **Possível Causa:** O provisionamento da identidade depende exclusivamente do trigger Cloud Function `auth.user().onCreate` em `functions/index.js`. Em ambientes onde as Cloud Functions não estão ativas ou para contas criadas antes da function, o documento `publicProfiles/{uid}` nunca é criado. A rota `/api/me/public-profile/route.ts` apenas busca o documento e, se não existe, devolve 404 puro sem criar o registro inicial (JIT provisioning).
@@ -115,6 +118,7 @@ A auditoria completa de QA realizada no **WillTreino** combinou análise estáti
 ## 7. Bugs P1 (Altos)
 
 ### BUG-002 — Falha ao Carregar Gráficos de Evolução e Recordes Pessoais na Rota `/progress`
+
 - **Categoria:** Functional / Persistence
 - **Severidade:** P1 — ALTO
 - **Status:** CONFIRMADO
@@ -124,9 +128,9 @@ A auditoria completa de QA realizada no **WillTreino** combinou análise estáti
 - **Passos para reproduzir:**
   1. Fazer login no sistema.
   2. Clicar no menu ou navegar para `/progress`.
-  3. Observar a seção *"Volume por treino"* e *"Seus recordes"*.
-- **Resultado esperado:** Se não houver treinos, deve exibir o Empty State amigável (*"Nenhum treino concluído ainda"*). Se houver, exibir as barras de volume.
-- **Resultado atual:** Exibe banner de erro: *"Não conseguimos carregar sua evolução. Tentar novamente"*.
+  3. Observar a seção _"Volume por treino"_ e _"Seus recordes"_.
+- **Resultado esperado:** Se não houver treinos, deve exibir o Empty State amigável (_"Nenhum treino concluído ainda"_). Se houver, exibir as barras de volume.
+- **Resultado atual:** Exibe banner de erro: _"Não conseguimos carregar sua evolução. Tentar novamente"_.
 - **Frequência:** 5/5 tentativas.
 - **Erro técnico encontrado:** Falha na Promise de `listRecentExerciseResults` em `history-repository.ts`.
 - **Possível Causa:** A query em `history-repository.ts` faz:
@@ -149,6 +153,7 @@ A auditoria completa de QA realizada no **WillTreino** combinou análise estáti
 ---
 
 ### BUG-003 — Onboarding Aceita Altura e Peso Negativos ou Nulos Sem Bloqueio no Cliente
+
 - **Categoria:** Functional / Validation
 - **Severidade:** P2 — MÉDIO
 - **Status:** CONFIRMADO
@@ -158,8 +163,8 @@ A auditoria completa de QA realizada no **WillTreino** combinou análise estáti
 - **Passos para reproduzir:**
   1. Avançar até a Etapa 3 (Altura e peso).
   2. Digitar `-10` no campo de Altura e `-5` no campo de Peso.
-  3. Clicar em *"Próximo"*.
-- **Resultado esperado:** O formulário deve apresentar erro de validação inline (ex: *"A altura mínima é 50 cm"*) e impedir o avanço de etapa.
+  3. Clicar em _"Próximo"_.
+- **Resultado esperado:** O formulário deve apresentar erro de validação inline (ex: _"A altura mínima é 50 cm"_) e impedir o avanço de etapa.
 - **Resultado atual:** O formulário não valida os atributos `min`/`max` com o schema Zod no cliente antes de disparar o `update()`, avançando a etapa silenciosamente. O backend rejeita a gravação se bater no Firestore (`weightKg > 0 && weightKg <= 400`), causando dessincronia do rascunho.
 - **Possível Causa:** O componente `OnboardingWizard` usa `mode: "onChange"` sem aplicar um resolver Zod no `useForm`, dependendo apenas dos atributos HTML nativos que são ignorados ao submeter via JavaScript.
 - **Componentes envolvidos:**
@@ -170,6 +175,7 @@ A auditoria completa de QA realizada no **WillTreino** combinou análise estáti
 ---
 
 ### BUG-004 — Alerta de Falha Silenciosa em Convites de Treino na Tela de Conta
+
 - **Categoria:** Functional / Social
 - **Severidade:** P2 — MÉDIO
 - **Status:** CONFIRMADO
@@ -177,7 +183,7 @@ A auditoria completa de QA realizada no **WillTreino** combinou análise estáti
 - **Passos para reproduzir:**
   1. Acessar `/account`.
   2. Observar a seção de convites de treino.
-- **Resultado atual:** Tag oculta para leitor de tela anuncia: *"Não foi possível carregar seus convites agora."*.
+- **Resultado atual:** Tag oculta para leitor de tela anuncia: _"Não foi possível carregar seus convites agora."_.
 - **Possível Causa:** `subscribeToIncomingTrainingInvites` falha caso o usuário não tenha documento de perfil público sincronizado com as regras do Firestore.
 - **Componentes envolvidos:**
   - `src/features/group/training-invite-repository.ts`
@@ -188,6 +194,7 @@ A auditoria completa de QA realizada no **WillTreino** combinou análise estáti
 ## 8. Bugs P3 (Baixos)
 
 ### BUG-005 — Inconsistência de Título no Botão de Pesquisa de Alimentos
+
 - **Categoria:** UI / Consistency
 - **Severidade:** P3 — BAIXO
 - **Status:** CONFIRMADO
@@ -231,19 +238,20 @@ A auditoria completa de QA realizada no **WillTreino** combinou análise estáti
 
 ## 12. Score Final do Produto
 
-| Dimensão | Nota (0 a 10) | Justificativa |
-| :--- | :---: | :--- |
-| **Funcionalidade** | 8.0 | O fluxo core de treino funciona bem, mas a evolução e o ID falham em novas contas. |
-| **Estabilidade** | 8.5 | Local-first sólido; boa recuperação de erros no treino. |
-| **UX** | 8.5 | Interface limpa, foco no exercício sem distrações desnecessárias. |
-| **UI / Design System** | 9.5 | Cores, contraste e componentes Tailwind v4 impecáveis. |
-| **Mobile** | 9.0 | Responsividade sem overflow em nenhuma resolução de 320px a 1920px. |
-| **Performance** | 9.0 | Carregamento rápido na Vercel e bundles enxutos. |
-| **Segurança** | 9.5 | Regras de segurança no Firestore exemplares e aderentes à LGPD. |
-| **Acessibilidade** | 9.5 | Suporte a leitor de tela, atalhos de teclado e tokens de alto contraste. |
-| **Qualidade Técnica** | 9.0 | TypeScript estrito, arquitetura limpa e testes unitários abrangentes. |
-| **Prontidão para Produção** | 7.5 | Bloqueado apenas pelos bugs P0/P1 descritos. |
+| Dimensão                    | Nota (0 a 10) | Justificativa                                                                      |
+| :-------------------------- | :-----------: | :--------------------------------------------------------------------------------- |
+| **Funcionalidade**          |      8.0      | O fluxo core de treino funciona bem, mas a evolução e o ID falham em novas contas. |
+| **Estabilidade**            |      8.5      | Local-first sólido; boa recuperação de erros no treino.                            |
+| **UX**                      |      8.5      | Interface limpa, foco no exercício sem distrações desnecessárias.                  |
+| **UI / Design System**      |      9.5      | Cores, contraste e componentes Tailwind v4 impecáveis.                             |
+| **Mobile**                  |      9.0      | Responsividade sem overflow em nenhuma resolução de 320px a 1920px.                |
+| **Performance**             |      9.0      | Carregamento rápido na Vercel e bundles enxutos.                                   |
+| **Segurança**               |      9.5      | Regras de segurança no Firestore exemplares e aderentes à LGPD.                    |
+| **Acessibilidade**          |      9.5      | Suporte a leitor de tela, atalhos de teclado e tokens de alto contraste.           |
+| **Qualidade Técnica**       |      9.0      | TypeScript estrito, arquitetura limpa e testes unitários abrangentes.              |
+| **Prontidão para Produção** |      7.5      | Bloqueado apenas pelos bugs P0/P1 descritos.                                       |
 
 ### **WillTreino Quality Score: 8.7 / 10**
+
 **Classificação de Prontidão:** **BETA (Próximo de Release Candidate)**  
-*O sistema possui excelente base de código, alta fidelidade de design e segurança de dados exemplar. A resolução imediata do BUG-001 (provisionamento do perfil) e do BUG-002 (índice da evolução) colocará o produto em estado de Release Candidate.*
+_O sistema possui excelente base de código, alta fidelidade de design e segurança de dados exemplar. A resolução imediata do BUG-001 (provisionamento do perfil) e do BUG-002 (índice da evolução) colocará o produto em estado de Release Candidate._

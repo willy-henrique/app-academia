@@ -1,9 +1,9 @@
 # Relatório Final de Validação — WillTreino (Release Candidate)
 
 **Data da Validação:** 11 de Setembro de 2026  
-**Commit de Produção:** `239ec2d` (*fix(core): QA audit fixes, JIT public profile, cardio resume, onboarding validation and gamification*)  
+**Commit de Produção:** `239ec2d` (_fix(core): QA audit fixes, JIT public profile, cardio resume, onboarding validation and gamification_)  
 **Repositório Remoto:** `https://github.com/willy-henrique/app-academia.git` (branch `main`)  
-**Ambiente Local:** `http://localhost:3000` (Porta 3000 ativa e validada via ScheduledTask no Windows)  
+**Ambiente Local:** `http://localhost:3000` (Porta 3000 ativa e validada via ScheduledTask no Windows)
 
 ---
 
@@ -23,14 +23,14 @@ Todos os problemas críticos e moderados identificados durante a auditoria de QA
 
 ## 2. Tabela de Bugs e Resoluções
 
-| ID | Módulo / Problema | Comportamento Anterior | Comportamento Após Correção | Validação |
-|---|---|---|---|---|
-| **FIX-001** (BUG-001) | **Identidade / JIT Provisioning** (`publicProfiles`) | Usuários criados no Firebase Auth ficavam sem documento, retornando 404 em `/api/me/public-profile` e quebrando a tela `/account`. | A rota `/api/me/public-profile` agora cria atomicamente via transação o perfil público com `WT-XXXX-XXXX` no primeiro acesso. | Teste unitário em `route.test.ts` e validação HTTP 200/401. |
-| **FIX-002** (BUG-002) | **Evolução / Índices Firestore** (`/progress`) | Gráficos de volume e PRs quebravam com *"Não conseguimos carregar sua evolução"* por divergência de ordenação com o índice composto. | Adicionado índice composto para `completedAt: "DESCENDING"` em `firestore.indexes.json` e fallback com try/catch seguro em `history-repository.ts`. | Testes em `progress-charts.test.tsx` 100% aprovados. |
-| **FIX-003** (CARDIO-REFRESH) | **Cardio / Retomada de Sessão** (`/cardio`) | Recarregar a página `/cardio` durante o exercício deixava a sessão órfã como `Pendente` sem permitir retomar nem concluir. | Sessões ativas são detectadas e restauradas do Firestore/cache local com base no timestamp real (`startedAt`), com botão "Retomar cardio" e conclusão correta. | Novo teste automatizado em `cardio-page-client.test.tsx` (4/4 verdes). |
-| **FIX-004** (BUG-003) | **Onboarding / Validação de Altura e Peso** | Formulário permitia avançar com valores negativos (ex: `-10` cm, `-5` kg), colidindo com regras do Firestore. | Bloqueio estrito no cliente impedindo o avanço se altura < 50 cm ou > 250 cm, ou se peso < 20 kg ou > 400 kg, com alerta acessível (`role="alert"`). | Teste unitário em `onboarding-wizard.test.tsx` (7/7 verdes). |
-| **FIX-005** (BUG-004) | **Auth / Mensagens de Cadastro** | Mensagens técnicas ou opacas em caso de falha de conexão ou e-mail já existente no Firebase Auth. | Mapeamento detalhado dos códigos de erro do Firebase Auth em `src/features/auth/signup.ts` orientando para login direto. | Testes em `signup-form.test.tsx` aprovados. |
-| **FIX-006** (BUG-005) | **Nutrição / Alinhamento de Botão** (`/food`) | Margem manual `sm:mb-[1.625rem]` desalinhada em viewports intermediários. | Layout ajustado com flexbox nativo `sm:items-center` e margem responsiva. | Testes em `food-search-panel.test.tsx` aprovados. |
+| ID                           | Módulo / Problema                                    | Comportamento Anterior                                                                                                               | Comportamento Após Correção                                                                                                                                    | Validação                                                              |
+| ---------------------------- | ---------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------- |
+| **FIX-001** (BUG-001)        | **Identidade / JIT Provisioning** (`publicProfiles`) | Usuários criados no Firebase Auth ficavam sem documento, retornando 404 em `/api/me/public-profile` e quebrando a tela `/account`.   | A rota `/api/me/public-profile` agora cria atomicamente via transação o perfil público com `WT-XXXX-XXXX` no primeiro acesso.                                  | Teste unitário em `route.test.ts` e validação HTTP 200/401.            |
+| **FIX-002** (BUG-002)        | **Evolução / Índices Firestore** (`/progress`)       | Gráficos de volume e PRs quebravam com _"Não conseguimos carregar sua evolução"_ por divergência de ordenação com o índice composto. | Adicionado índice composto para `completedAt: "DESCENDING"` em `firestore.indexes.json` e fallback com try/catch seguro em `history-repository.ts`.            | Testes em `progress-charts.test.tsx` 100% aprovados.                   |
+| **FIX-003** (CARDIO-REFRESH) | **Cardio / Retomada de Sessão** (`/cardio`)          | Recarregar a página `/cardio` durante o exercício deixava a sessão órfã como `Pendente` sem permitir retomar nem concluir.           | Sessões ativas são detectadas e restauradas do Firestore/cache local com base no timestamp real (`startedAt`), com botão "Retomar cardio" e conclusão correta. | Novo teste automatizado em `cardio-page-client.test.tsx` (4/4 verdes). |
+| **FIX-004** (BUG-003)        | **Onboarding / Validação de Altura e Peso**          | Formulário permitia avançar com valores negativos (ex: `-10` cm, `-5` kg), colidindo com regras do Firestore.                        | Bloqueio estrito no cliente impedindo o avanço se altura < 50 cm ou > 250 cm, ou se peso < 20 kg ou > 400 kg, com alerta acessível (`role="alert"`).           | Teste unitário em `onboarding-wizard.test.tsx` (7/7 verdes).           |
+| **FIX-005** (BUG-004)        | **Auth / Mensagens de Cadastro**                     | Mensagens técnicas ou opacas em caso de falha de conexão ou e-mail já existente no Firebase Auth.                                    | Mapeamento detalhado dos códigos de erro do Firebase Auth em `src/features/auth/signup.ts` orientando para login direto.                                       | Testes em `signup-form.test.tsx` aprovados.                            |
+| **FIX-006** (BUG-005)        | **Nutrição / Alinhamento de Botão** (`/food`)        | Margem manual `sm:mb-[1.625rem]` desalinhada em viewports intermediários.                                                            | Layout ajustado com flexbox nativo `sm:items-center` e margem responsiva.                                                                                      | Testes em `food-search-panel.test.tsx` aprovados.                      |
 
 ---
 
@@ -38,10 +38,10 @@ Todos os problemas críticos e moderados identificados durante a auditoria de QA
 
 1. **Gamificação & Sistema de XP (`src/domain/progression/gamification.ts`):**
    - Pontuação por treino (+100 XP), por série (+15 XP), por cardio (+40 XP) e bônus de recorde pessoal (+50 XP).
-   - Tabela de patentes de Nível 1 (*Iniciante*) até Nível 7 (*Lenda WillTreino*).
+   - Tabela de patentes de Nível 1 (_Iniciante_) até Nível 7 (_Lenda WillTreino_).
    - Card visual do atleta no Dashboard (`AthleteXpCard`) com barra de progresso para o próximo nível e contador de semanas consecutivas.
 2. **Divisão Muscular Dinâmica (`src/domain/workout/muscle-split.ts`):**
-   - Substituição de "Bloco principal" por agrupamento real: *Peito & Tríceps*, *Costas & Bíceps*, *Pernas & Glúteos*.
+   - Substituição de "Bloco principal" por agrupamento real: _Peito & Tríceps_, _Costas & Bíceps_, _Pernas & Glúteos_.
 3. **Mapa da Semana (`WeeklyScheduleMap`):**
    - Visualizador de Segunda a Domingo com destaque no dia de hoje, dias concluídos e dias de recuperação muscular.
 
@@ -72,5 +72,6 @@ Todos os problemas críticos e moderados identificados durante a auditoria de QA
 - **Acessibilidade:** 9.8 / 10
 
 ### **WillTreino Quality Score Final: 9.6 / 10**
+
 **Classificação:** **PRODUCTION READY / RELEASE CANDIDATE**  
-*O código foi sincronizado com a branch `main` do GitHub (`commit 239ec2d`), disparando o deploy automático na Vercel e mantendo a suíte de testes 100% verde.*
+_O código foi sincronizado com a branch `main` do GitHub (`commit 239ec2d`), disparando o deploy automático na Vercel e mantendo a suíte de testes 100% verde._

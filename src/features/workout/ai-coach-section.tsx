@@ -19,9 +19,10 @@ import type { OnboardingDraft } from "@/domain/onboarding/onboarding";
 type AiCoachModalProps = Readonly<{
   draft: OnboardingDraft | null;
   onClose?: () => void;
+  onApplyPlan?: (plan: AiWorkoutDietPlan) => void;
 }>;
 
-export function AiCoachSection({ draft }: AiCoachModalProps) {
+export function AiCoachSection({ draft, onApplyPlan }: AiCoachModalProps) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [plan, setPlan] = useState<AiWorkoutDietPlan | null>(null);
@@ -183,6 +184,20 @@ export function AiCoachSection({ draft }: AiCoachModalProps) {
                   </div>
                 ))}
               </div>
+
+              {onApplyPlan ? (
+                <div className="flex justify-end pt-2">
+                  <Button
+                    variant="primary"
+                    size="default"
+                    onClick={() => onApplyPlan(plan)}
+                    className="w-full sm:w-auto font-bold shadow-md"
+                  >
+                    <Dumbbell className="size-4" />
+                    Substituir treino atual por este da IA
+                  </Button>
+                </div>
+              ) : null}
             </div>
           ) : (
             <div className="space-y-4">

@@ -14,7 +14,7 @@ export default function DashboardPage() {
     <main className="wt-page space-y-8" id="main-content">
       <HomeGreeting />
       <AthleteXpCard stats={null} totalWorkouts={1} streakWeeks={1} />
-      <WeeklyScheduleMap stats={null} daysPerWeek={4} />
+      <WeeklyScheduleMap />
       <div className="grid gap-8 lg:grid-cols-[minmax(0,1.15fr)_minmax(0,1fr)] lg:items-start">
         <TodayWorkoutCard />
         <WeeklyDashboard compact />

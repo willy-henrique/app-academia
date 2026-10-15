@@ -50,6 +50,23 @@ service cloud.firestore {
         ]);
     }
 
+    function isUserSettingsWrite(uid) {
+      return isOwner(uid)
+        && request.resource.data.keys().hasOnly([
+          "createdAt",
+          "notificationPreferences",
+          "updatedAt",
+        ])
+        && request.resource.data.keys().hasAll(["notificationPreferences"])
+        && request.resource.data.notificationPreferences.keys().hasOnly([
+          "showWeeklyGoalReminder",
+        ])
+        && request.resource.data.notificationPreferences.keys().hasAll([
+          "showWeeklyGoalReminder",
+        ])
+        && request.resource.data.notificationPreferences.showWeeklyGoalReminder is bool;
+    }
+
     function isWorkoutSessionOwner(sessionId) {
       return signedIn()
         && get(/databases/$(database)/documents/workoutSessions/$(sessionId)).data.ownerUid
@@ -252,6 +269,102 @@ service cloud.firestore {
       return isFoodLogEntryPayload(uid, entryId)
         && resource.data.ownerUid == uid
         && resource.data.id == entryId
+        && request.resource.data.createdAt == resource.data.createdAt
+        && request.resource.data.updatedAt == request.time;
+    }
+
+    function isRecipeNutrition(nutrition) {
+      return nutrition is map
+        && nutrition.keys().hasOnly([
+          "carbohydratesGrams",
+          "energyKcal",
+          "fatGrams",
+          "fiberGrams",
+          "proteinGrams",
+          "sodiumMilligrams",
+        ])
+        && nutrition.keys().hasAll([
+          "carbohydratesGrams",
+          "energyKcal",
+          "fatGrams",
+          "fiberGrams",
+          "proteinGrams",
+          "sodiumMilligrams",
+        ])
+        && nutrition.energyKcal is number
+        && nutrition.energyKcal >= 0
+        && nutrition.energyKcal <= 100000
+        && nutrition.carbohydratesGrams is number
+        && nutrition.carbohydratesGrams >= 0
+        && nutrition.carbohydratesGrams <= 100000
+        && nutrition.proteinGrams is number
+        && nutrition.proteinGrams >= 0
+        && nutrition.proteinGrams <= 100000
+        && nutrition.fatGrams is number
+        && nutrition.fatGrams >= 0
+        && nutrition.fatGrams <= 100000
+        && (nutrition.fiberGrams == null || (
+          nutrition.fiberGrams is number
+          && nutrition.fiberGrams >= 0
+          && nutrition.fiberGrams <= 100000
+        ))
+        && (nutrition.sodiumMilligrams == null || (
+          nutrition.sodiumMilligrams is number
+          && nutrition.sodiumMilligrams >= 0
+          && nutrition.sodiumMilligrams <= 100000
+        ));
+    }
+
+    function isRecipePayload(uid, recipeId) {
+      return isOwner(uid)
+        && request.resource.data.keys().hasOnly([
+          "createdAt",
+          "estimatedNutritionPerServing",
+          "id",
+          "ingredients",
+          "name",
+          "notes",
+          "ownerUid",
+          "servings",
+          "updatedAt",
+        ])
+        && request.resource.data.keys().hasAll([
+          "createdAt",
+          "estimatedNutritionPerServing",
+          "id",
+          "ingredients",
+          "name",
+          "notes",
+          "ownerUid",
+          "servings",
+          "updatedAt",
+        ])
+        && request.resource.data.id == recipeId
+        && request.resource.data.ownerUid == uid
+        && request.resource.data.name is string
+        && request.resource.data.name.size() > 0
+        && request.resource.data.name.size() <= 180
+        && isStringOrNull(request.resource.data.notes)
+        && (request.resource.data.notes == null || request.resource.data.notes.size() <= 500)
+        && request.resource.data.servings is int
+        && request.resource.data.servings > 0
+        && request.resource.data.servings <= 100
+        && request.resource.data.ingredients is list
+        && request.resource.data.ingredients.size() > 0
+        && request.resource.data.ingredients.size() <= 40
+        && isRecipeNutrition(request.resource.data.estimatedNutritionPerServing);
+    }
+
+    function isRecipeCreate(uid, recipeId) {
+      return isRecipePayload(uid, recipeId)
+        && request.resource.data.createdAt == request.time
+        && request.resource.data.updatedAt == request.time;
+    }
+
+    function isRecipeUpdate(uid, recipeId) {
+      return isRecipePayload(uid, recipeId)
+        && resource.data.ownerUid == uid
+        && resource.data.id == recipeId
         && request.resource.data.createdAt == resource.data.createdAt
         && request.resource.data.updatedAt == request.time;
     }
@@ -532,7 +645,7 @@ service cloud.firestore {
 
     match /userSettings/{uid} {
       allow get: if isOwner(uid);
-      allow create, update: if isPrivateLikeDocumentWrite(uid);
+      allow create, update: if isUserSettingsWrite(uid);
       allow delete: if isOwner(uid);
     }
 
@@ -592,6 +705,18 @@ service cloud.firestore {
     }
 
     match /foodLogs/{uid}/{document=**} {
+      allow read, write: if false;
+    }
+
+    // Receitas carregam apenas dados alimentares privados e nunca são compartilhadas com parceiros.
+    match /recipes/{uid}/items/{recipeId} {
+      allow get, list: if isOwner(uid);
+      allow create: if isRecipeCreate(uid, recipeId);
+      allow update: if isRecipeUpdate(uid, recipeId);
+      allow delete: if isOwner(uid);
+    }
+
+    match /recipes/{uid}/{document=**} {
       allow read, write: if false;
     }
 

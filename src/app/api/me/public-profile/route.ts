@@ -46,9 +46,14 @@ export async function GET(request: Request) {
               return;
             }
 
-            const rawName = decodedToken.name || (decodedToken.email ? decodedToken.email.split("@")[0] : null);
+            const rawName =
+              decodedToken.name || (decodedToken.email ? decodedToken.email.split("@")[0] : null);
             const displayName = rawName ? rawName.trim() : "Atleta WillTreino";
-            const username = displayName.toLowerCase().replace(/[^a-z0-9]/g, "").slice(0, 24) || null;
+            const username =
+              displayName
+                .toLowerCase()
+                .replace(/[^a-z0-9]/g, "")
+                .slice(0, 24) || null;
 
             const newProfile = {
               avatar: decodedToken.picture ?? null,

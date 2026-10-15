@@ -6,7 +6,6 @@ import {
   getDoc,
   getDocs,
   limit as queryLimit,
-  orderBy,
   query,
   serverTimestamp,
   setDoc,
@@ -20,6 +19,7 @@ import { getFirebaseClientServices } from "@/infrastructure/firebase/client";
 
 const cardioSessionCollection = "cardioSessions";
 const activeCardioStorageKey = "willtreino.cardio-active-session.v1";
+const cardioCandidateLimit = 24;
 
 function storage(): Storage | null {
   if (typeof window === "undefined") {
@@ -113,14 +113,19 @@ export async function findActiveCardioSession(uid: string): Promise<CardioSessio
       query(
         collection(firestore, cardioSessionCollection),
         where("ownerUid", "==", uid),
-        where("status", "in", ["ACTIVE", "PLANNED", "RESCHEDULED"]),
-        orderBy("createdAt", "desc"),
-        queryLimit(1),
+        queryLimit(cardioCandidateLimit),
       ),
     );
 
-    if (!snapshot.empty) {
-      const parsed = cardioSessionSchema.safeParse(snapshot.docs[0].data());
+    const activeDocument = snapshot.docs
+      .filter((document) => ["ACTIVE", "PLANNED", "RESCHEDULED"].includes(document.data().status))
+      .sort((left, right) =>
+        String(right.data().createdAt ?? "").localeCompare(String(left.data().createdAt ?? "")),
+      )
+      .at(0);
+
+    if (activeDocument) {
+      const parsed = cardioSessionSchema.safeParse(activeDocument.data());
       if (parsed.success) {
         persistActiveCardioLocal(parsed.data);
         return parsed.data;
@@ -140,15 +145,18 @@ export async function listCardioSessions(uid: string, limit: number): Promise<Ca
       query(
         collection(firestore, cardioSessionCollection),
         where("ownerUid", "==", uid),
-        orderBy("createdAt", "desc"),
-        queryLimit(Math.max(1, limit)),
+        queryLimit(Math.max(cardioCandidateLimit, limit)),
       ),
     );
 
     return snapshot.docs
       .map((document) => cardioSessionSchema.safeParse(document.data()))
       .filter((parsed) => parsed.success)
-      .map((parsed) => parsed.data);
+      .map((parsed) => parsed.data)
+      .sort((left, right) =>
+        String(right.createdAt ?? "").localeCompare(String(left.createdAt ?? "")),
+      )
+      .slice(0, Math.max(1, limit));
   } catch (err) {
     console.error("[cardio-repository] falha ao listar cardios:", err);
     return [];

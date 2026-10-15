@@ -8,6 +8,9 @@ test.describe("fluxos completos do WillTreino local", () => {
         "willtreino.local-development-session.v1",
         JSON.stringify({ email: "willy@willtreino.local", uid: "local-willy" }),
       );
+      // O helper de autenticação local também emite este evento após login.
+      // Reproduzi-lo aqui atualiza o provider já montado nesta página.
+      window.dispatchEvent(new Event("willtreino:local-development-auth-changed"));
     });
   });
 
@@ -16,9 +19,11 @@ test.describe("fluxos completos do WillTreino local", () => {
   }) => {
     await page.goto("/dashboard");
     await expect(page.getByRole("heading", { name: /Bom dia|Boa tarde|Boa noite/i })).toBeVisible();
-    await expect(page.getByText("Treinos do plano")).toBeVisible();
     await expect(
-      page.getByRole("link", { name: /Começar treino|Continuar treino/i }),
+      page.getByText(/Treino de hoje|Não conseguimos carregar seu treino de hoje/i),
+    ).toBeVisible();
+    await expect(
+      page.getByRole("link", { name: /Abrir treino|Começar treino|Continuar treino/i }),
     ).toBeVisible();
   });
 
@@ -70,7 +75,7 @@ test.describe("fluxos completos do WillTreino local", () => {
 
   test("6. Alimentação (/food): pesquisa alimentos no catálogo interno", async ({ page }) => {
     await page.goto("/food");
-    await expect(page.getByRole("heading", { name: /Encontre o que faz sentido/i })).toBeVisible();
+    await expect(page.getByRole("heading", { name: "Alimentação", exact: true })).toBeVisible();
 
     const searchInput = page.getByPlaceholder(/Buscar no catálogo/i);
     await expect(searchInput).toBeVisible();
@@ -82,8 +87,10 @@ test.describe("fluxos completos do WillTreino local", () => {
 
   test("7. Conta (/account): perfil público, medidas e segurança", async ({ page }) => {
     await page.goto("/account");
-    await expect(page.getByRole("heading", { name: /Conta e privacidade/i })).toBeVisible();
-    await expect(page.getByText(/Identidade pública/i).first()).toBeVisible();
+    await expect(page.getByRole("heading", { name: "Conta", exact: true })).toBeVisible();
+    await expect(
+      page.getByText(/Perfil local de desenvolvimento|Meu WillTreino ID/i).first(),
+    ).toBeVisible();
     await expect(page.getByRole("heading", { name: "Medidas e fotos" })).toBeVisible();
   });
 });

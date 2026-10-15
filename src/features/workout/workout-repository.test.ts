@@ -114,6 +114,50 @@ describe("workout repository", () => {
     );
   });
 
+  it("clears the active pointer when persisting a terminal session", async () => {
+    const { session } = createWorkoutInit("alice", createDefaultOnboardingDraft());
+    const completed = { ...session, status: "COMPLETED" as const };
+
+    getFirebaseClientServices.mockReturnValue({ firestore: "firestore" });
+    doc.mockImplementation((...parts: string[]) => parts.join("/"));
+    serverTimestamp.mockReturnValue("server-timestamp");
+
+    await saveWorkoutSession("alice", completed);
+
+    expect(setDoc).toHaveBeenCalledWith(
+      "firestore/privateProfiles/alice",
+      expect.objectContaining({ activeWorkoutSessionId: null }),
+      { merge: true },
+    );
+  });
+
+  it("ignores a legacy pointer to a completed session", async () => {
+    const { session } = createWorkoutInit("alice", createDefaultOnboardingDraft());
+    getFirebaseClientServices.mockReturnValue({ firestore: "firestore" });
+    doc.mockImplementation((...parts: string[]) => parts.join("/"));
+    getDoc
+      .mockResolvedValueOnce({
+        data: () => ({
+          activeWorkoutSessionId: session.id,
+          birthDate: null,
+          createdAt: null,
+          locale: "pt-BR",
+          onboarding: createDefaultOnboardingDraft(),
+          onboardingVersion: 1,
+          preferences: { simplifiedMode: false, weekStartsOn: "monday" },
+          timezone: "America/Sao_Paulo",
+          updatedAt: null,
+        }),
+        exists: () => true,
+      })
+      .mockResolvedValueOnce({
+        data: () => ({ ...session, status: "COMPLETED" }),
+        exists: () => true,
+      });
+
+    await expect(loadWorkoutSession("alice")).resolves.toBeNull();
+  });
+
   it("writes a set record with stable ownership", async () => {
     const draft = {
       ...createDefaultOnboardingDraft(),

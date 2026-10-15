@@ -1,21 +1,18 @@
-import {
-  collection,
-  getDocs,
-  limit as queryLimit,
-  orderBy,
-  query,
-  where,
-} from "firebase/firestore";
+import { collection, getDocs, limit as queryLimit, query, where } from "firebase/firestore";
 
 import { exerciseSetResultSchema, type ExerciseSetResult } from "@/domain/progression/progression";
 import { getFirebaseClientServices } from "@/infrastructure/firebase/client";
 
 const workoutSessionCollection = "workoutSessions";
+const historyCandidateLimit = 24;
 
 /**
  * Reads the person's own recent history. The fan-out is bounded by
  * `sessionLimit` sessions - the app never scans the whole history - and the
  * query is scoped to the caller, so nobody reads someone else's results.
+ *
+ * The query only uses the automatic `ownerUid` index. This keeps history
+ * available while the production composite index is being published.
  */
 export async function listRecentExerciseResults(
   uid: string,
@@ -27,15 +24,20 @@ export async function listRecentExerciseResults(
       query(
         collection(firestore, workoutSessionCollection),
         where("ownerUid", "==", uid),
-        where("status", "==", "COMPLETED"),
-        orderBy("completedAt", "desc"),
-        queryLimit(Math.max(1, sessionLimit)),
+        queryLimit(Math.max(historyCandidateLimit, sessionLimit)),
       ),
     );
 
+    const completedSessions = sessions.docs
+      .filter((session) => session.data().status === "COMPLETED")
+      .sort((left, right) =>
+        String(right.data().completedAt ?? "").localeCompare(String(left.data().completedAt ?? "")),
+      )
+      .slice(0, Math.max(1, sessionLimit));
+
     const results: ExerciseSetResult[] = [];
 
-    for (const session of sessions.docs) {
+    for (const session of completedSessions) {
       const sets = await getDocs(collection(session.ref, "sets"));
 
       for (const set of sets.docs) {

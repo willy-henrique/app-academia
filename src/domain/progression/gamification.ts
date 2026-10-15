@@ -1,4 +1,3 @@
-
 export type AthleteRank = {
   level: number;
   title: string;

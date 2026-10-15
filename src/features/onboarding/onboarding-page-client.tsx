@@ -3,14 +3,14 @@
 import { useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 
-import { LoadingState } from "@/components/ui/states";
+import { ErrorState, LoadingState } from "@/components/ui/states";
 import { useAuthSession } from "@/features/auth/auth-session-provider";
 import {
   loadOnboardingDraft,
   saveOnboardingDraft,
 } from "@/features/onboarding/onboarding-repository";
 import { OnboardingWizard } from "@/features/onboarding/onboarding-wizard";
-import { createDefaultOnboardingDraft, type OnboardingDraft } from "@/domain/onboarding/onboarding";
+import { type OnboardingDraft } from "@/domain/onboarding/onboarding";
 
 export function OnboardingPageClient() {
   const router = useRouter();
@@ -18,6 +18,7 @@ export function OnboardingPageClient() {
   const [draft, setDraft] = useState<OnboardingDraft | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [loadAttempt, setLoadAttempt] = useState(0);
 
   const persistDraft = useCallback(
     async (nextDraft: OnboardingDraft) => {
@@ -48,9 +49,9 @@ export function OnboardingPageClient() {
         setError(null);
       } catch {
         if (isActive) {
-          setDraft(createDefaultOnboardingDraft());
+          setDraft(null);
           setError(
-            "Não conseguimos carregar suas respostas anteriores. Você pode começar agora — o que preencher será salvo quando a conexão voltar.",
+            "Não conseguimos carregar suas respostas anteriores. Elas não foram alteradas; tente novamente quando a conexão voltar.",
           );
         }
       } finally {
@@ -65,7 +66,7 @@ export function OnboardingPageClient() {
     return () => {
       isActive = false;
     };
-  }, [status, user]);
+  }, [loadAttempt, status, user]);
 
   if (status !== "authenticated") {
     return (
@@ -77,7 +78,7 @@ export function OnboardingPageClient() {
     );
   }
 
-  if (isLoading || !draft) {
+  if (isLoading) {
     return (
       <main className="wt-page max-w-[var(--wt-container-form)]" id="main-content">
         <LoadingState label="Carregando suas respostas…" lines={4} />
@@ -85,16 +86,24 @@ export function OnboardingPageClient() {
     );
   }
 
+  if (!draft) {
+    return (
+      <main className="wt-page max-w-[var(--wt-container-form)]" id="main-content">
+        <ErrorState
+          description={error ?? "Não conseguimos carregar suas respostas agora."}
+          title="Não foi possível abrir seu questionário"
+          onRetry={() => {
+            setError(null);
+            setIsLoading(true);
+            setLoadAttempt((attempt) => attempt + 1);
+          }}
+        />
+      </main>
+    );
+  }
+
   return (
     <main className="wt-page" id="main-content">
-      {error ? (
-        <p
-          className="mx-auto mb-6 max-w-[var(--wt-container-form)] rounded-wt-lg bg-wt-warning-subtle px-4 py-3 text-wt-body-sm text-wt-warning-text"
-          role="status"
-        >
-          {error}
-        </p>
-      ) : null}
       <OnboardingWizard
         initialDraft={draft}
         onComplete={() => router.push("/workout")}

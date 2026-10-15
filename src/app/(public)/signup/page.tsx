@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useRouter } from "next/navigation";
 
@@ -22,7 +22,13 @@ export default function SignUpPage() {
         <span className="wt-text-caption">ou</span>
         <span className="h-px flex-1 bg-wt-border" />
       </div>
-      <GoogleSignInButton />
+      <GoogleSignInButton
+        onSuccess={(result) => {
+          if (result !== "REDIRECT_STARTED") {
+            router.replace("/onboarding");
+          }
+        }}
+      />
     </PublicAuthShell>
   );
 }

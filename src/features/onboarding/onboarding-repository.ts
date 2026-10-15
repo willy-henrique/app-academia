@@ -7,7 +7,6 @@ import {
   onboardingDraftSchema,
   type OnboardingDraft,
 } from "@/domain/onboarding/onboarding";
-import { privateProfileSchema } from "@/domain/identity/private-profile";
 import { getFirebaseClientServices } from "@/infrastructure/firebase/client";
 
 const onboardingFirestorePath = "privateProfiles";
@@ -20,12 +19,15 @@ export async function loadOnboardingDraft(uid: string): Promise<OnboardingDraft>
     return createDefaultOnboardingDraft();
   }
 
-  const profileResult = privateProfileSchema.safeParse(snapshot.data());
-  if (!profileResult.success) {
+  // O onboarding é independente dos demais campos do perfil. Contas antigas
+  // ou criadas antes do gatilho de perfil completo ainda precisam recuperar as
+  // respostas já salvas, em vez de começar o questionário do zero.
+  const onboardingResult = onboardingDraftSchema.safeParse(snapshot.data().onboarding);
+  if (!onboardingResult.success) {
     return createDefaultOnboardingDraft();
   }
 
-  return profileResult.data.onboarding ?? createDefaultOnboardingDraft();
+  return onboardingResult.data;
 }
 
 export async function saveOnboardingDraft(

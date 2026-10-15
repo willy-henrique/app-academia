@@ -1,4 +1,4 @@
-import { Accessibility, Apple, ChevronRight, SlidersHorizontal } from "lucide-react";
+import { Accessibility, Apple, ChevronRight, CircleHelp, SlidersHorizontal } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
 
@@ -8,6 +8,7 @@ import { AccountTrainingInvites } from "@/features/group/account-training-invite
 import { AccountPrivacyPanel } from "@/features/profile/account-privacy-panel";
 import { MeasurementsPanel } from "@/features/profile/measurements-panel";
 import { PublicProfileCard } from "@/features/profile/public-profile-card";
+import { NotificationPreferencesPanel } from "@/features/settings/notification-preferences-panel";
 
 export const metadata: Metadata = {
   title: "Conta · WillTreino",
@@ -31,6 +32,12 @@ const preferenceLinks = [
     href: "/food",
     icon: Apple,
     label: "Alimentação",
+  },
+  {
+    description: "Primeiros passos, vídeos e respostas rápidas",
+    href: "/help",
+    icon: CircleHelp,
+    label: "Ajuda e orientações",
   },
 ] as const;
 
@@ -80,6 +87,7 @@ export default function AccountPage() {
         </div>
         <div className="space-y-8">
           <MeasurementsPanel />
+          <NotificationPreferencesPanel />
           <AccountSecurityPanel />
           <AccountPrivacyPanel />
         </div>

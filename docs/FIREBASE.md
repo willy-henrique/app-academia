@@ -44,7 +44,9 @@ O comando de teste futuro deve iniciar emuladores isolados, carregar regras e ex
 
 ### Configuração local atual
 
-`firebase.json` configura Auth, Firestore, Functions Gen 2, Storage e Emulator UI para o projeto local `willtreino-local`. As regras iniciais de Firestore e Storage negam toda leitura/escrita; o primeiro teste de integração comprova essa negação. Execute `npm run test:emulator` com um JDK 21+ disponível no `PATH`. O comando usa `emulators:exec`, portanto não pode acessar um projeto Firebase remoto.
+`firebase.json` configura Auth, Firestore, Functions Gen 2, Storage e Emulator UI para o projeto local `willtreino-local`. As regras iniciais de Firestore e Storage negam toda leitura/escrita; o primeiro teste de integração comprova essa negação. Execute `npm run test:emulator` com Node 22 e um JDK 21+ disponíveis no `PATH`. O comando usa `emulators:exec`, portanto não pode acessar um projeto Firebase remoto.
+
+O script define `FUNCTIONS_DISCOVERY_TIMEOUT=90` e aquece o gatilho de criação de usuário e uma callable autenticada antes da suíte. Isso elimina uma corrida da primeira execução dos workers de Auth/Functions. Quando o repositório está em `/mnt/c` no WSL, `npm run test:emulator` executa automaticamente uma cópia efêmera no filesystem Linux usando o cache local de dependências; o código original nunca é alterado. O aquecimento cria apenas um usuário efêmero no Emulator e confirma os perfis público e privado e a resolução do WillTreino ID antes dos testes.
 
 Para autenticação local no projeto Firebase remoto, o console precisa ter **Email/Password** e **Google** habilitados em Authentication → Sign-in method. Projetos criados após abril de 2025 não incluem `localhost` nos domínios autorizados automaticamente: adicione `localhost` em Authentication → Settings → Authorized domains para testar OAuth local. A CSP do app permite apenas os hosts oficiais necessários ao helper do Google (`apis.google.com`, `www.gstatic.com` e `accounts.google.com`), sem liberar scripts genéricos.
 

@@ -1,6 +1,14 @@
 "use client";
 
-import { Bike, CalendarClock, CircleCheck, Footprints, HeartPulse, Timer, Play } from "lucide-react";
+import {
+  Bike,
+  CalendarClock,
+  CircleCheck,
+  Footprints,
+  HeartPulse,
+  Play,
+  Timer,
+} from "lucide-react";
 import { useEffect, useState } from "react";
 
 import { PageHeader, SectionHeader } from "@/components/layout/page-header";
@@ -19,7 +27,7 @@ import {
   completeCardioSession,
   createCardioPrescription,
   createCardioSession,
-    rescheduleCardioSession,
+  rescheduleCardioSession,
   skipCardioSession,
   startCardioSession,
   type CardioModality,
@@ -99,6 +107,7 @@ export function CardioPageClient() {
   });
   const [saving, setSaving] = useState(false);
   const [now, setNow] = useState(() => new Date());
+  const [durationWasEdited, setDurationWasEdited] = useState(false);
 
   useEffect(() => {
     let active = true;
@@ -114,11 +123,15 @@ export function CardioPageClient() {
         if (active && activeSession) {
           setSession(activeSession);
           setModality(activeSession.prescription.modality);
-          setMinutes(String(Math.max(1, Math.round(activeSession.prescription.targetSeconds / 60))));
+          setMinutes(
+            String(Math.max(1, Math.round(activeSession.prescription.targetSeconds / 60))),
+          );
+          setDurationWasEdited(false);
           setFeedback({
-            text: activeSession.status === "ACTIVE"
-              ? "Cardio em andamento recuperado."
-              : "Sessão de cardio pendente recuperada.",
+            text:
+              activeSession.status === "ACTIVE"
+                ? "Cardio em andamento recuperado."
+                : "Sessão de cardio pendente recuperada.",
             tone: "info",
           });
         }
@@ -186,6 +199,7 @@ export function CardioPageClient() {
     });
 
     setNow(new Date());
+    setDurationWasEdited(false);
     setSkipError(null);
     await persist(startCardioSession(created), { text: "Cardio iniciado.", tone: "info" });
   }
@@ -202,14 +216,15 @@ export function CardioPageClient() {
       return;
     }
 
-    // Calcula duração real feita baseada no timer ou no stepper
+    // Por padrão, o tempo registrado vem do cronômetro. A pessoa ainda pode
+    // corrigir manualmente a duração quando ela não corresponde ao exercício.
     const startedAtMs = session.startedAt ? Date.parse(session.startedAt) : Number.NaN;
-    const calculatedMinutes = Number.isFinite(startedAtMs)
-      ? Math.max(1, Math.round((Date.now() - startedAtMs) / 60000))
-      : Number.parseInt(minutes, 10) || 15;
-
-    const chosenMinutes = Number.parseInt(minutes, 10) || calculatedMinutes;
-    const durationSeconds = chosenMinutes * 60;
+    const elapsedSeconds = Number.isFinite(startedAtMs)
+      ? Math.max(1, Math.round((Date.now() - startedAtMs) / 1000))
+      : 0;
+    const manualSeconds = Math.max(1, Number.parseInt(minutes, 10) || 15) * 60;
+    const durationSeconds =
+      durationWasEdited || elapsedSeconds === 0 ? manualSeconds : elapsedSeconds;
     const completed = completeCardioSession(session, { durationSeconds });
 
     setSaving(true);
@@ -331,7 +346,10 @@ export function CardioPageClient() {
                   step={5}
                   unit="min"
                   value={minutes}
-                  onValueChange={setMinutes}
+                  onValueChange={(value) => {
+                    setMinutes(value);
+                    setDurationWasEdited(false);
+                  }}
                 />
                 <Select
                   id="cardio-requirement"
@@ -398,7 +416,8 @@ export function CardioPageClient() {
                 </div>
               ) : (
                 <div className="rounded-wt-md bg-wt-surface-elevated p-4 text-wt-body-sm text-wt-text-secondary">
-                  Esta sessão está salva como pendente. Você pode retomá-la agora ou finalizar diretamente.
+                  Esta sessão está salva como pendente. Você pode retomá-la agora ou finalizar
+                  diretamente.
                 </div>
               )}
 
@@ -411,12 +430,20 @@ export function CardioPageClient() {
                 step={5}
                 unit="min"
                 value={minutes}
-                onValueChange={setMinutes}
+                onValueChange={(value) => {
+                  setMinutes(value);
+                  setDurationWasEdited(true);
+                }}
               />
 
               <div className="grid gap-2 sm:flex">
                 {!running ? (
-                  <Button disabled={saving} size="xl" variant="secondary" onClick={() => void resume()}>
+                  <Button
+                    disabled={saving}
+                    size="xl"
+                    variant="secondary"
+                    onClick={() => void resume()}
+                  >
                     <Play className="size-4" />
                     Retomar cardio
                   </Button>
@@ -500,10 +527,7 @@ export function CardioPageClient() {
                 );
 
                 return (
-                  <li
-                    className="flex min-h-16 items-center gap-3 px-4 py-3"
-                    key={item.id}
-                  >
+                  <li className="flex min-h-16 items-center gap-3 px-4 py-3" key={item.id}>
                     <span
                       aria-hidden="true"
                       className="grid size-10 shrink-0 place-items-center rounded-wt-md bg-wt-surface-elevated text-wt-text-secondary-strong"
@@ -525,7 +549,7 @@ export function CardioPageClient() {
                       </div>
                       <p className="text-xs text-wt-text-secondary-strong">
                         {isSkipped
-                          ? item.skipReason ?? "Sem motivo informado"
+                          ? (item.skipReason ?? "Sem motivo informado")
                           : `${formatMinutes(item.durationSeconds)} · meta ${formatMinutes(item.prescription.targetSeconds)}`}
                         {dateLabel ? ` · ${dateLabel}` : ""}
                       </p>

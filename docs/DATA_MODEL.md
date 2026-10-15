@@ -18,7 +18,7 @@
 | `healthProfiles/{uid}`             | informações de saúde/autodeclaração e consentimentos                                                                          | dono; acesso operacional mínimo pelo servidor |
 | `accessibilityProfiles/{uid}`      | necessidades, capacidade funcional, restrições e adaptações                                                                   | dono; nunca parceiro                          |
 | `nutritionProfiles/{uid}`          | preferências e orçamento alimentar                                                                                            | dono; nunca parceiro                          |
-| `userSettings/{uid}`               | privacidade, notificações, semana e simplificação de UI                                                                       | dono restrito                                 |
+| `userSettings/{uid}`               | preferências estritas de lembrete no app (`notificationPreferences.showWeeklyGoalReminder`) e metadados de auditoria          | dono restrito; schema validado pelas Rules    |
 | `publicUserIdIndex/{normalizedId}` | referência interna para resolução controlada                                                                                  | somente servidor                              |
 
 O índice não é consultável pelo client. `resolvePublicUserId()` devolve somente preview permitido: nome, avatar, WillTreino ID e estado básico de conta.
@@ -46,7 +46,7 @@ O onboarding progressivo salva rascunho autoritativo em `privateProfiles/{uid}.o
 
 ## Nutrição e conteúdo
 
-`foods`, `foodPrices`, `recipes`, `mealPlans`, `foodLogs` e `shoppingLists` usam ownership explícito. O catálogo `foods` mantém `nutritionPer100g`, porção padrão com massa conhecida ou `null`, e `source` com provider, atribuição, confiança, licença/URL/id externo e data de coleta. Valores de fibra/sódio desconhecidos permanecem `null`; macros/calorias são aproximados e não viram recomendação clínica. Preços incluem região, loja, unidade normalizada, origem, confiança e `collectedAt`; dados ausentes não podem ser apresentados como atuais. Providers externos ficam atrás de porta `FoodProvider`.
+`foods`, `foodPrices`, `recipes`, `mealPlans`, `foodLogs` e `shoppingLists` usam ownership explícito. Receitas vivem em `recipes/{uid}/items/{recipeId}` e salvam snapshot privado dos ingredientes, porções em gramas e estimativa por porção; parceiros não leem esse caminho. O catálogo `foods` mantém `nutritionPer100g`, porção padrão com massa conhecida ou `null`, e `source` com provider, atribuição, confiança, licença/URL/id externo e data de coleta. Valores de fibra/sódio desconhecidos permanecem `null`; macros/calorias são aproximados e não viram recomendação clínica. Preços incluem região, loja, unidade normalizada, origem, confiança e `collectedAt`; dados ausentes não podem ser apresentados como atuais. Providers externos ficam atrás de porta `FoodProvider`.
 
 O diário usa `foodLogs/{uid}/entries/{entryId}`. Cada entrada pertence ao dono do caminho e guarda `consumedAt`, refeição, quantidade em gramas, notas opcionais, macros aproximados e um snapshot mínimo do alimento (nome, porção, provider e confiança). O snapshot preserva o histórico quando o catálogo muda; parceiro de treino não lê nem escreve esse caminho. Detalhes em [NUTRITION.md](NUTRITION.md).
 

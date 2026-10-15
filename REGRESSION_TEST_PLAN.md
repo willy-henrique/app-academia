@@ -11,7 +11,7 @@ Este plano deve ser executado integralmente após a aplicação das correções 
   - Verificar redirecionamento imediato para a Etapa 1 do `/onboarding`.
 - [ ] **Cadastro com E-mail Existente:**
   - Tentar cadastrar com `willydev01@gmail.com`.
-  - Verificar se a mensagem *"Este email já possui uma conta"* é exibida em destaque e sem quebra de página.
+  - Verificar se a mensagem _"Este email já possui uma conta"_ é exibida em destaque e sem quebra de página.
 - [ ] **Login Válido:**
   - Entrar com credenciais válidas.
   - Verificar redirecionamento para o `/dashboard`.
@@ -24,7 +24,7 @@ Este plano deve ser executado integralmente após a aplicação das correções 
   - Confirmar redirecionamento compulsório para `/login`.
 - [ ] **WillTreino ID no Perfil Público:**
   - Acessar `/account` com conta nova e conta existente.
-  - Confirmar que o card *"Meu WillTreino ID"* exibe o formato `WT-[A-Z0-9]{4}-[A-Z0-9]{4}` e o botão de cópia funciona.
+  - Confirmar que o card _"Meu WillTreino ID"_ exibe o formato `WT-[A-Z0-9]{4}-[A-Z0-9]{4}` e o botão de cópia funciona.
 
 ---
 
@@ -76,7 +76,7 @@ Este plano deve ser executado integralmente após a aplicação das correções 
 ## 5. Módulo: Evolução & Métricas
 
 - [ ] **Volume por Treino (`/progress`):**
-  - Acessar `/progress` e certificar que a seção de volume renderiza sem disparar o banner *"Não conseguimos carregar sua evolução"*.
+  - Acessar `/progress` e certificar que a seção de volume renderiza sem disparar o banner _"Não conseguimos carregar sua evolução"_.
   - Confirmar exibição do gráfico de barras ou do Empty State caso não haja treinos no histórico.
 - [ ] **Recordes Pessoais (PRs):**
   - Confirmar listagem correta das maiores cargas registradas por exercício.

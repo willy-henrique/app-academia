@@ -16,6 +16,10 @@ WillFood organiza alimentos, registros, receitas, orçamento e lista de compras.
 
 O domínio de preço é separado e será adicionado na Task 17.7. Todo dinheiro continuará inteiro em centavos.
 
+## Orçamento
+
+`calculateBudgetPlan()` recebe uma cesta com preço unitário e quantidade inteiros em centavos, compara seu total ao orçamento mensal informado no onboarding e devolve saldo ou déficit sem ocultar estouro. As referências semanal e diária são divisões inteiras; qualquer resto de centavos permanece no saldo mensal em vez de virar uma fração inexistente. O motor não sugere compra nem inventa preço: a proveniência de preços entra no modelo da Task 17.7.
+
 ## Providers e privacidade
 
 `FoodProvider`, em `src/application/nutrition/food-provider.ts`, é a porta de consulta do catálogo. Ele normaliza buscas em português sem acento, limita resultados entre 1 e 50 e não expõe detalhes específicos de infraestrutura à interface.
@@ -32,4 +36,8 @@ Qualquer integração externa futura entra por um adapter próprio, com atribui�
 
 O contrato `FoodLogEntry` registra uma fotografia do alimento no instante do consumo: provider, confiança, nome, porção, gramas e macros calculados. Isso evita que uma mudança posterior no catálogo altere o histórico da pessoa.
 
-Os documentos vivem em `foodLogs/{uid}/entries/{entryId}`. As Firestore Rules permitem somente ao dono criar, listar, ler, atualizar e excluir as próprias entradas, validam o formato do snapshot e rejeitam provider ou macros fora do contrato. A validação no Emulator está pendente no ambiente atual porque o Firebase Emulator exige Java; ela deve rodar antes de liberar a feature em produção.
+Os documentos vivem em `foodLogs/{uid}/entries/{entryId}`. As Firestore Rules permitem somente ao dono criar, listar, ler, atualizar e excluir as próprias entradas, validam o formato do snapshot e rejeitam provider ou macros fora do contrato. Essa política foi validada no Firebase Emulator (incluindo negação de leitura/escrita de outra conta e payload inválido).
+
+## Receitas privadas
+
+Uma receita salva em `recipes/{uid}/items/{recipeId}` guarda os ingredientes disponíveis no catálogo, suas quantidades em gramas e uma estimativa de macros por porção calculada no momento do salvamento. Ela é privada por padrão e não fica visível a parceiros de treino. A estimativa preserva a origem/confiança de cada ingrediente, mas não é uma prescrição alimentar; alterações no catálogo não reescrevem automaticamente uma receita já salva.

@@ -57,6 +57,12 @@ export async function loadWorkoutSession(uid: string): Promise<WorkoutSession | 
     return null;
   }
 
+  // Sessões fechadas pertencem ao histórico. Tratar um ponteiro legado para
+  // elas como ativa prende a pessoa no resumo e impede o próximo treino.
+  if (["COMPLETED", "CANCELLED"].includes(sessionResult.data.status)) {
+    return null;
+  }
+
   return sessionResult.data;
 }
 
@@ -79,11 +85,13 @@ export async function saveWorkoutSession(
     { merge: true },
   );
 
+  const isTerminal = parsedSession.status === "COMPLETED" || parsedSession.status === "CANCELLED";
+
   await setDoc(
     privateProfileRef,
     {
       activeWorkoutPlanId: parsedSession.planId,
-      activeWorkoutSessionId: parsedSession.id,
+      activeWorkoutSessionId: isTerminal ? null : parsedSession.id,
       updatedAt: serverTimestamp(),
     },
     { merge: true },

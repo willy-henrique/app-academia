@@ -35,7 +35,10 @@ export function getYouTubeEmbedUrl(url: string | null): string | null {
     let videoId = "";
     if (parsed.hostname === "youtu.be") {
       videoId = parsed.pathname.slice(1);
-    } else if (parsed.hostname.includes("youtube.com")) {
+    } else if (
+      parsed.hostname.includes("youtube.com") ||
+      parsed.hostname.includes("youtube-nocookie.com")
+    ) {
       if (parsed.pathname.startsWith("/embed/")) {
         videoId = parsed.pathname.replace("/embed/", "");
       } else {

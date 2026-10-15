@@ -91,6 +91,16 @@ describe("cardio domain", () => {
     expect(isCardioPending(rescheduled)).toBe(true);
   });
 
+  it("clears the elapsed timer when an active cardio is rescheduled", () => {
+    const active = startCardioSession(session(), now);
+    const rescheduled = rescheduleCardioSession(active, new Date("2026-09-10T18:00:00.000Z"), now);
+
+    expect(rescheduled.startedAt).toBeNull();
+    expect(startCardioSession(rescheduled, new Date("2026-09-10T18:00:00.000Z")).startedAt).toBe(
+      "2026-09-10T18:00:00.000Z",
+    );
+  });
+
   it("refuses to reschedule to the past and to move a closed cardio", () => {
     expect(() =>
       rescheduleCardioSession(session(), new Date("2026-09-09T11:00:00.000Z"), now),

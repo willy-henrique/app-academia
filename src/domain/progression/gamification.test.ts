@@ -3,7 +3,6 @@ import {
   calculateAthleteRank,
   computeGamificationProfile,
   computeXpFromHistory,
-  ranksTable,
 } from "./gamification";
 
 describe("gamification domain", () => {

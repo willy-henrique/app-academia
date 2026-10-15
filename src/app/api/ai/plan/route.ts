@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import {
+  AiRateLimitError,
   generateCustomWorkoutAndDietPlan,
   type AiGenerateInput,
 } from "@/application/ai/coach-service";
@@ -25,7 +26,23 @@ export async function POST(request: Request) {
     const plan = await generateCustomWorkoutAndDietPlan(input);
     return NextResponse.json({ ok: true, plan });
   } catch (error) {
+    if (error instanceof AiRateLimitError) {
+      const retryAfterSeconds = error.retryAfterSeconds;
+      return NextResponse.json(
+        {
+          ok: false,
+          error: retryAfterSeconds
+            ? `A IA está no limite temporário. Aguarde ${retryAfterSeconds} segundos e tente novamente.`
+            : error.message,
+        },
+        {
+          status: 429,
+          headers: retryAfterSeconds ? { "Retry-After": String(retryAfterSeconds) } : undefined,
+        },
+      );
+    }
+
     const message = error instanceof Error ? error.message : "Erro ao gerar plano de IA";
-    return NextResponse.json({ ok: false, error: message }, { status: 500 });
+    return NextResponse.json({ ok: false, error: message }, { status: 502 });
   }
 }

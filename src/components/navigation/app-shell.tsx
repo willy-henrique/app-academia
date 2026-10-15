@@ -1,6 +1,14 @@
 "use client";
 
-import { Apple, ChartNoAxesColumn, Dumbbell, HeartPulse, House, UserRound } from "lucide-react";
+import {
+  Apple,
+  ChartNoAxesColumn,
+  CircleHelp,
+  Dumbbell,
+  HeartPulse,
+  House,
+  UserRound,
+} from "lucide-react";
 import { usePathname } from "next/navigation";
 import type { ReactNode } from "react";
 
@@ -30,13 +38,14 @@ const accountItem: NavigationItem = {
   label: "Conta",
   matches: ["/onboarding"],
 };
+const helpItem: NavigationItem = { href: "/help", icon: CircleHelp, label: "Ajuda" };
 
 /** Desktop: tudo visível, agrupado por intenção. */
 export const desktopNavigationSections: readonly NavigationSection[] = [
   { items: [homeItem, workoutItem, cardioItem], label: "Treinar" },
   { items: [progressItem, foodItem], label: "Acompanhar" },
 ];
-export const desktopFooterItems: readonly NavigationItem[] = [accountItem];
+export const desktopFooterItems: readonly NavigationItem[] = [helpItem, accountItem];
 
 /**
  * Mobile: cinco destinos de uso frequente. Alimentação continua a um toque

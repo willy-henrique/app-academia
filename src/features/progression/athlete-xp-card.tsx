@@ -29,7 +29,10 @@ export function AthleteXpCard({ stats, totalWorkouts = 0, streakWeeks = 1 }: Ath
   });
 
   return (
-    <Card className="border-wt-border bg-gradient-to-r from-wt-surface via-wt-surface to-wt-accent-subtle/30 p-4 sm:p-5" elevated>
+    <Card
+      className="border-wt-border bg-gradient-to-r from-wt-surface via-wt-surface to-wt-accent-subtle/30 p-4 sm:p-5"
+      elevated
+    >
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div className="flex items-center gap-3">
           <div className="grid size-12 place-items-center rounded-wt-lg bg-wt-accent-subtle text-wt-accent-hover font-black text-lg shadow-sm border border-wt-accent/20">

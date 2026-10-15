@@ -21,7 +21,6 @@ export type WorkoutSessionOverview = Readonly<{
   totalVolumeKg: number;
 }>;
 
-
 export function getActiveExercise(
   session: WorkoutSession,
 ): WorkoutSession["exerciseQueue"][number] | null {

@@ -187,6 +187,31 @@ describe("Firestore baseline rules", () => {
     );
   });
 
+  it("allows only the owner's validated in-app notification preference", async () => {
+    const aliceFirestore = testEnvironment.authenticatedContext("alice").firestore();
+    const bobFirestore = testEnvironment.authenticatedContext("bob").firestore();
+
+    await assertSucceeds(
+      setDoc(doc(aliceFirestore, "userSettings", "alice"), {
+        createdAt: serverTimestamp(),
+        notificationPreferences: { showWeeklyGoalReminder: false },
+        updatedAt: serverTimestamp(),
+      }),
+    );
+    await assertFails(
+      updateDoc(doc(aliceFirestore, "userSettings", "alice"), {
+        notificationPreferences: { showWeeklyGoalReminder: "yes" },
+      }),
+    );
+    await assertFails(
+      setDoc(doc(bobFirestore, "userSettings", "alice"), {
+        createdAt: serverTimestamp(),
+        notificationPreferences: { showWeeklyGoalReminder: true },
+        updatedAt: serverTimestamp(),
+      }),
+    );
+  });
+
   it("authorizes workout sessions and sets only for the owner", async () => {
     const aliceFirestore = testEnvironment.authenticatedContext("alice").firestore();
     const bobFirestore = testEnvironment.authenticatedContext("bob").firestore();
@@ -882,6 +907,56 @@ describe("Firestore baseline rules", () => {
         ...entry,
         food: { ...entry.food, sourceProvider: "UNKNOWN" },
         id: "food-log-invalid",
+      }),
+    );
+  });
+
+  it("keeps recipes private to their owner and validates the saved estimate", async () => {
+    const aliceFirestore = testEnvironment.authenticatedContext("alice").firestore();
+    const bobFirestore = testEnvironment.authenticatedContext("bob").firestore();
+    const recipe = {
+      createdAt: serverTimestamp(),
+      estimatedNutritionPerServing: {
+        carbohydratesGrams: 12.9,
+        energyKcal: 163,
+        fatGrams: 2.3,
+        fiberGrams: null,
+        proteinGrams: 19.9,
+        sodiumMilligrams: 44.9,
+      },
+      id: "recipe-1",
+      ingredients: [
+        {
+          confidence: "ESTIMATED",
+          foodId: "chicken-breast-grilled",
+          foodName: "Peito de frango grelhado",
+          grams: 120,
+          sourceProvider: "INTERNAL",
+        },
+      ],
+      name: "Frango grelhado",
+      notes: null,
+      ownerUid: "alice",
+      servings: 1,
+      updatedAt: serverTimestamp(),
+    };
+
+    await assertSucceeds(
+      setDoc(doc(aliceFirestore, "recipes", "alice", "items", "recipe-1"), recipe),
+    );
+    await assertSucceeds(getDoc(doc(aliceFirestore, "recipes", "alice", "items", "recipe-1")));
+    await assertFails(getDoc(doc(bobFirestore, "recipes", "alice", "items", "recipe-1")));
+    await assertFails(
+      setDoc(doc(bobFirestore, "recipes", "alice", "items", "recipe-2"), {
+        ...recipe,
+        id: "recipe-2",
+      }),
+    );
+    await assertFails(
+      setDoc(doc(aliceFirestore, "recipes", "alice", "items", "recipe-invalid"), {
+        ...recipe,
+        estimatedNutritionPerServing: { ...recipe.estimatedNutritionPerServing, energyKcal: -1 },
+        id: "recipe-invalid",
       }),
     );
   });

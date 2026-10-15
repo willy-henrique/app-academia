@@ -209,6 +209,9 @@ export function rescheduleCardioSession(
 
   const next = clone(session);
   next.rescheduledFor = scheduledFor.toISOString();
+  // O tempo efetivo deve recomeçar quando a pessoa retomar o cardio. Manter
+  // o timestamp anterior faria o período reagendado contar como exercício.
+  next.startedAt = null;
   next.status = "RESCHEDULED";
   next.updatedAt = now.toISOString();
   return next;

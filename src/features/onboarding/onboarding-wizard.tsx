@@ -650,7 +650,10 @@ export function OnboardingWizard({
                 />
               </div>
               {physicalProfileError ? (
-                <p className="rounded-wt-md bg-wt-danger-subtle p-3 text-xs text-wt-danger-text" role="alert">
+                <p
+                  className="rounded-wt-md bg-wt-danger-subtle p-3 text-xs text-wt-danger-text"
+                  role="alert"
+                >
                   {physicalProfileError}
                 </p>
               ) : null}

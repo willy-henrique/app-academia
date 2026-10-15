@@ -57,8 +57,13 @@ import { PlateCalculator } from "./plate-calculator";
 import { AiCoachSection } from "./ai-coach-section";
 import { RestTimer } from "./rest-timer";
 import { WorkoutCompletion } from "./workout-completion";
-import { createWorkoutInit, finishStrengthSession } from "./workout-flow";
+import {
+  createWorkoutInit,
+  createWorkoutSessionFromAiPlan,
+  finishStrengthSession,
+} from "./workout-flow";
 import { loadWorkoutSession, saveWorkoutSession } from "./workout-repository";
+import type { AiWorkoutDietPlan } from "@/application/ai/coach-service";
 import {
   describeWorkoutSession,
   formatElapsed,
@@ -347,23 +352,6 @@ export function WorkoutPageClient({ autosaveDelayMs = 550 }: WorkoutPageClientPr
     [activeExercise, recentResults],
   );
 
-  const currentOneRm = useMemo(() => {
-    const l = Number.parseFloat(loadKg);
-    const r = Number.parseInt(reps, 10);
-    if (!Number.isFinite(l) || !Number.isFinite(r) || l <= 0 || r <= 0) return null;
-    return Math.round(l * (1 + r / 30));
-  }, [loadKg, reps]);
-
-  const lastOneRm = useMemo(() => {
-    if (!lastResult || lastResult.loadKg <= 0 || lastResult.reps <= 0) return null;
-    return Math.round(lastResult.loadKg * (1 + lastResult.reps / 30));
-  }, [lastResult]);
-
-  const isNewPr = useMemo(() => {
-    if (!currentOneRm || !lastOneRm) return false;
-    return currentOneRm > lastOneRm;
-  }, [currentOneRm, lastOneRm]);
-
   // Ao entrar em um exercício, os campos começam pela última carga usada (ou
   // mantêm a atual) e pela meta de repetições. É estado de tela, derivado
   // durante a renderização — o padrão do React para "ajustar ao mudar a prop".
@@ -402,6 +390,29 @@ export function WorkoutPageClient({ autosaveDelayMs = 550 }: WorkoutPageClientPr
       () => setSetConfirmation(null),
       setConfirmationMs,
     );
+  }
+
+  async function handleApplyAiPlan(aiPlan: AiWorkoutDietPlan) {
+    if (!user) return;
+    try {
+      setActionLoading(true);
+      const newSession = createWorkoutSessionFromAiPlan(user.uid, aiPlan);
+      setSession(newSession);
+      persistActiveWorkoutSession(newSession);
+      await saveWorkoutSession(user.uid, newSession);
+      setFeedback({
+        text: `Treino da IA aplicado com sucesso: ${aiPlan.workout.title}.`,
+        tone: "success",
+      });
+      confirmSet("Treino atualizado pela IA");
+    } catch {
+      setFeedback({
+        text: "Não foi possível aplicar o treino da IA. Tente novamente.",
+        tone: "danger",
+      });
+    } finally {
+      setActionLoading(false);
+    }
   }
 
   async function handleCompleteSet() {
@@ -481,7 +492,9 @@ export function WorkoutPageClient({ autosaveDelayMs = 550 }: WorkoutPageClientPr
   }
 
   const swapReplacement =
-    exerciseDetails?.regressions[0] ?? exerciseDetails?.alternatives[0] ?? null;
+    exerciseDetails?.regressions.find((r) => r.exerciseId !== activeExercise?.exerciseId) ??
+    exerciseDetails?.alternatives.find((a) => a.exerciseId !== activeExercise?.exerciseId) ??
+    null;
 
   async function handleSwap() {
     if (!session || !activeExercise || !exerciseDetails) {
@@ -743,7 +756,7 @@ export function WorkoutPageClient({ autosaveDelayMs = 550 }: WorkoutPageClientPr
         </div>
       ) : (
         <div className="space-y-6">
-          <AiCoachSection draft={onboardingDraft} />
+          <AiCoachSection draft={onboardingDraft} onApplyPlan={handleApplyAiPlan} />
           <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_19rem] lg:items-start">
             <div className="min-w-0 space-y-4">
               {awaitingFinish ? (
@@ -885,8 +898,7 @@ export function WorkoutPageClient({ autosaveDelayMs = 550 }: WorkoutPageClientPr
                     </div>
 
                     {/* Calculadora visual de anilhas para exercícios com barra livre */}
-                    {Boolean(exerciseDetails?.equipment?.includes("barbell")) ||
-                    Number.parseFloat(loadKg) >= 25 ? (
+                    {Boolean(exerciseDetails?.equipment?.includes("barbell")) ? (
                       <PlateCalculator targetWeightKg={Number.parseFloat(loadKg) || 0} />
                     ) : null}
                     <NumberStepper
