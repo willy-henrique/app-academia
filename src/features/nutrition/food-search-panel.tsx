@@ -79,7 +79,7 @@ function FoodResultCard({
             ["Gordura", `${formatMacro(nutrition.fatGrams)} g`],
           ].map(([term, value]) => (
             <div className="rounded-wt-md bg-wt-surface-elevated px-2 py-2" key={term}>
-              <dt className="text-[0.6875rem] font-semibold text-wt-text-secondary-strong">
+              <dt className="text-wt-caption font-semibold text-wt-text-secondary-strong">
                 {term}
               </dt>
               <dd className="m-0 mt-0.5 text-wt-body-sm font-bold text-wt-text-primary wt-tabular">

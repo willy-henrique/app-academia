@@ -200,33 +200,36 @@ export function WeeklyScheduleMap({ daysPerWeek, now, stats }: WeeklyScheduleMap
         <div className="grid grid-cols-2 gap-2 sm:grid-cols-4 lg:grid-cols-7">
           {agendaDays.map((day) => (
             <div
-              className={`relative flex min-h-28 flex-col justify-between rounded-wt-lg border p-3 ${
+              className={`relative flex min-h-24 flex-col justify-between rounded-wt-lg border p-3 ${
                 day.isToday
                   ? "border-wt-accent-hover bg-wt-accent-subtle/30 ring-2 ring-wt-accent-hover/30"
                   : day.isRest
-                    ? "border-wt-border/50 bg-wt-surface opacity-75"
+                    ? "border-dashed border-wt-border bg-wt-surface-elevated/60"
                     : "border-wt-border bg-wt-surface"
               }`}
               key={day.dayIndex}
             >
               <div className="flex items-center justify-between gap-2">
                 <span
-                  className={`text-[0.6875rem] font-black tracking-wider ${
+                  className={`text-wt-caption font-bold tracking-wider ${
                     day.isToday ? "text-wt-accent-hover" : "text-wt-text-secondary"
                   }`}
                 >
                   {day.shortName}
                 </span>
                 {day.isToday ? (
-                  <span className="flex size-2 rounded-full bg-wt-accent-hover animate-pulse" />
+                  <span
+                    aria-hidden="true"
+                    className="flex size-2 rounded-full bg-wt-accent-hover"
+                  />
                 ) : day.isRest ? (
-                  <Moon aria-hidden="true" className="size-3.5 text-wt-text-secondary/60" />
+                  <Moon aria-hidden="true" className="size-3.5 text-wt-text-secondary" />
                 ) : null}
               </div>
 
               <div className="mt-3">
                 <p className="text-xs font-bold leading-tight text-wt-text-primary">{day.focus}</p>
-                <p className="mt-1 text-[0.65rem] text-wt-text-secondary">
+                <p className="mt-1 text-wt-caption text-wt-text-secondary-strong">
                   {day.isToday ? "Hoje" : day.isRest ? "Recuperação" : "Planejado"}
                 </p>
               </div>

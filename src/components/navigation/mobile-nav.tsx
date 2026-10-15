@@ -44,7 +44,7 @@ export function MobileNav({ currentPath, items }: MobileNavProps) {
             <li className="flex" key={href}>
               <Link
                 aria-current={active ? "page" : undefined}
-                className={`group relative flex min-h-11 w-full flex-col items-center justify-center gap-1 rounded-wt-md text-[0.6875rem] leading-none transition-colors duration-150 ${
+                className={`group relative flex min-h-11 w-full flex-col items-center justify-center gap-1 rounded-wt-md text-wt-caption leading-none transition-colors duration-150 ${
                   active
                     ? "font-bold text-wt-accent-text"
                     : "font-medium text-wt-text-secondary-strong hover:text-wt-text-primary"

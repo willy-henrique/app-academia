@@ -10,7 +10,7 @@ export const ranksTable: readonly AthleteRank[] = [
   { level: 1, title: "Iniciante", minXp: 0, maxXp: 300, badge: "Iniciante" },
   { level: 2, title: "Constante", minXp: 300, maxXp: 800, badge: "Constante" },
   { level: 3, title: "Dedicado", minXp: 800, maxXp: 1600, badge: "Dedicado" },
-  { level: 4, title: "Avancado", minXp: 1600, maxXp: 2800, badge: "Avancado" },
+  { level: 4, title: "Avançado", minXp: 1600, maxXp: 2800, badge: "Avançado" },
   { level: 5, title: "Atleta de Ferro", minXp: 2800, maxXp: 4500, badge: "Atleta de Ferro" },
   { level: 6, title: "Mestre", minXp: 4500, maxXp: 7000, badge: "Mestre" },
   { level: 7, title: "Lenda WillTreino", minXp: 7000, maxXp: 12000, badge: "Lenda" },

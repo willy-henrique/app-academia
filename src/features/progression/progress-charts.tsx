@@ -191,7 +191,7 @@ export function ProgressCharts() {
                     className="flex h-full min-w-0 flex-1 flex-col items-center justify-end gap-1"
                     key={point.label}
                   >
-                    <span className="text-[0.6875rem] font-semibold text-wt-text-secondary-strong wt-tabular">
+                    <span className="text-wt-caption font-semibold text-wt-text-secondary-strong wt-tabular">
                       {formatCompact(point.volumeKg)}
                     </span>
                     <div
@@ -202,7 +202,7 @@ export function ProgressCharts() {
                         height: `${maxVolume > 0 ? Math.max(4, (point.volumeKg / maxVolume) * 100) : 4}%`,
                       }}
                     />
-                    <span className="text-[0.6875rem] text-wt-text-secondary-strong wt-tabular">
+                    <span className="text-wt-caption text-wt-text-secondary-strong wt-tabular">
                       {formatDay(point.label, false)}
                     </span>
                   </div>

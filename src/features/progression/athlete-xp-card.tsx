@@ -1,73 +1,101 @@
-import { Trophy, Flame } from "lucide-react";
+import { Flame, Trophy } from "lucide-react";
+
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
 import { ProgressBar } from "@/components/ui/progress-bar";
+import { Skeleton } from "@/components/ui/skeleton";
 import {
   computeGamificationProfile,
   computeXpFromHistory,
-  type GamificationProfile,
 } from "@/domain/progression/gamification";
-import type { WeeklyStats } from "@/domain/progression/weekly-stats";
+import type { HistoryTotals } from "@/domain/progression/streak";
 
-type AthleteXpCardProps = {
-  stats: WeeklyStats | null;
-  totalWorkouts?: number;
-  streakWeeks?: number;
-};
+type AthleteXpCardProps = Readonly<{
+  /** `null` enquanto o histórico carrega: mostra esqueleto, nunca números inventados. */
+  totals: HistoryTotals | null;
+}>;
 
-export function AthleteXpCard({ stats, totalWorkouts = 0, streakWeeks = 1 }: AthleteXpCardProps) {
-  const xp = computeXpFromHistory({
-    completedWorkouts: totalWorkouts || (stats?.completedWorkouts ?? 0),
-    totalSets: stats?.totalSets ?? 0,
-    cardioSessions: stats?.cardioSessions ?? 0,
+function pluralize(count: number, singular: string, plural: string): string {
+  return `${count} ${count === 1 ? singular : plural}`;
+}
+
+/** Patente e XP do atleta, derivados do histórico semanal real. */
+export function AthleteXpCard({ totals }: AthleteXpCardProps) {
+  if (!totals) {
+    return (
+      <Card aria-busy="true" className="space-y-4 p-4 sm:p-5">
+        <p className="sr-only" role="status">
+          Carregando sua patente...
+        </p>
+        <div className="flex items-center gap-3">
+          <Skeleton className="size-12 rounded-wt-lg" />
+          <div className="space-y-2">
+            <Skeleton className="h-3 w-32" />
+            <Skeleton className="h-4 w-40" />
+          </div>
+        </div>
+        <Skeleton className="h-2 w-full rounded-wt-full" />
+      </Card>
+    );
+  }
+
+  const profile = computeGamificationProfile({
+    streakWeeks: totals.streakWeeks,
+    totalWorkouts: totals.completedWorkouts,
+    totalXp: computeXpFromHistory({
+      cardioSessions: totals.cardioSessions,
+      completedWorkouts: totals.completedWorkouts,
+      totalSets: totals.totalSets,
+    }),
   });
-
-  const profile: GamificationProfile = computeGamificationProfile({
-    totalXp: xp,
-    totalWorkouts: totalWorkouts || (stats?.completedWorkouts ?? 0),
-    streakWeeks,
-  });
+  const isMaxLevel = profile.progressPercent === 100 && profile.currentLevel >= 7;
 
   return (
-    <Card
-      className="border-wt-border bg-gradient-to-r from-wt-surface via-wt-surface to-wt-accent-subtle/30 p-4 sm:p-5"
-      elevated
-    >
+    <Card className="p-4 sm:p-5" elevated>
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div className="flex items-center gap-3">
-          <div className="grid size-12 place-items-center rounded-wt-lg bg-wt-accent-subtle text-wt-accent-hover font-black text-lg shadow-sm border border-wt-accent/20">
+          <div
+            aria-hidden="true"
+            className="grid size-12 shrink-0 place-items-center rounded-wt-lg border border-wt-accent-border bg-wt-accent-subtle text-wt-body-sm font-extrabold text-wt-accent-text wt-tabular"
+          >
             Nv.{profile.currentLevel}
           </div>
 
-          <div className="space-y-0.5">
-            <div className="flex items-center gap-2">
-              <span className="text-wt-caption font-semibold uppercase tracking-wider text-wt-accent-text">
-                Patente do Atleta
-              </span>
+          <div className="min-w-0 space-y-0.5">
+            <div className="flex flex-wrap items-center gap-2">
+              <span className="wt-kicker">Patente do atleta</span>
               <Badge tone="accent">{profile.title}</Badge>
             </div>
-            <p className="text-sm font-bold text-wt-text-primary">
-              {profile.totalXp} XP Acumulados
+            <p className="text-wt-label font-bold text-wt-text-primary wt-tabular">
+              {profile.totalXp} XP acumulados
             </p>
           </div>
         </div>
 
-        <div className="flex items-center gap-2 self-start sm:self-auto">
-          <div className="flex items-center gap-1.5 rounded-wt-md bg-wt-surface-elevated px-2.5 py-1.5 text-xs font-semibold text-wt-text-secondary border border-wt-border">
-            <Flame className="size-4 text-orange-500" />
-            <span>{profile.streakWeeks} sem. seguidas</span>
-          </div>
-          <div className="flex items-center gap-1.5 rounded-wt-md bg-wt-surface-elevated px-2.5 py-1.5 text-xs font-semibold text-wt-text-secondary border border-wt-border">
-            <Trophy className="size-4 text-yellow-500" />
-            <span>{profile.totalWorkouts} treinos</span>
-          </div>
-        </div>
+        <ul className="flex flex-wrap items-center gap-2">
+          <li>
+            <Badge icon={<Flame />} tone="warning">
+              {pluralize(profile.streakWeeks, "semana seguida", "semanas seguidas")}
+            </Badge>
+          </li>
+          <li>
+            <Badge icon={<Trophy />} tone="neutral">
+              {pluralize(profile.totalWorkouts, "treino", "treinos")}
+            </Badge>
+          </li>
+        </ul>
       </div>
 
       <div className="mt-4 space-y-1.5">
-        <div className="flex justify-between text-xs text-wt-text-secondary font-medium">
-          <span>Evolução para Nível {profile.currentLevel + 1}</span>
-          <span className="font-bold text-wt-text-primary">{profile.progressPercent}%</span>
+        <div className="flex justify-between text-wt-caption font-medium text-wt-text-secondary-strong">
+          <span>
+            {isMaxLevel
+              ? "Nível máximo alcançado"
+              : `Evolução para o nível ${profile.currentLevel + 1}`}
+          </span>
+          <span className="font-bold text-wt-text-primary wt-tabular">
+            {profile.progressPercent}%
+          </span>
         </div>
         <ProgressBar
           label="Progresso de nível"
@@ -76,10 +104,11 @@ export function AthleteXpCard({ stats, totalWorkouts = 0, streakWeeks = 1 }: Ath
           value={profile.progressPercent}
           valueText={`${profile.progressPercent}%`}
         />
-        <div className="flex justify-between text-[0.6875rem] text-wt-text-secondary">
-          <span>{profile.totalXp} XP</span>
-          <span>Próximo nível: {profile.nextLevelXp} XP</span>
-        </div>
+        {isMaxLevel ? null : (
+          <p className="text-wt-caption text-wt-text-secondary-strong wt-tabular">
+            Faltam {Math.max(0, profile.nextLevelXp - profile.totalXp)} XP para o próximo nível
+          </p>
+        )}
       </div>
     </Card>
   );

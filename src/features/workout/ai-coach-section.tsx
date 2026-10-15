@@ -167,7 +167,7 @@ export function AiCoachSection({ draft, onApplyPlan }: AiCoachModalProps) {
                     <div>
                       <div className="flex items-start justify-between gap-2">
                         <span className="text-xs font-bold text-wt-text-primary">{ex.name}</span>
-                        <span className="rounded-wt-full bg-wt-accent-subtle px-2 py-0.5 text-[0.6875rem] font-bold text-wt-accent-text">
+                        <span className="rounded-wt-full bg-wt-accent-subtle px-2 py-0.5 text-wt-caption font-bold text-wt-accent-text">
                           {ex.muscleGroup}
                         </span>
                       </div>
@@ -177,7 +177,7 @@ export function AiCoachSection({ draft, onApplyPlan }: AiCoachModalProps) {
                       </p>
                     </div>
                     {ex.tip ? (
-                      <p className="mt-2 border-t border-wt-border/60 pt-1.5 text-[0.7rem] italic text-wt-text-secondary">
+                      <p className="mt-2 border-t border-wt-border/60 pt-1.5 text-wt-caption italic text-wt-text-secondary">
                         💡 {ex.tip}
                       </p>
                     ) : null}
@@ -203,19 +203,19 @@ export function AiCoachSection({ draft, onApplyPlan }: AiCoachModalProps) {
             <div className="space-y-4">
               <div className="grid grid-cols-4 gap-2 text-center">
                 <div className="rounded-wt-md bg-wt-surface-elevated p-2">
-                  <div className="text-[0.65rem] font-bold text-wt-text-secondary">Calorias</div>
+                  <div className="text-wt-caption font-bold text-wt-text-secondary">Calorias</div>
                   <div className="text-sm font-black text-wt-text-primary">
                     {plan.nutrition.dailyCaloriesTarget} kcal
                   </div>
                 </div>
                 <div className="rounded-wt-md bg-wt-surface-elevated p-2">
-                  <div className="text-[0.65rem] font-bold text-wt-text-secondary">Proteína</div>
+                  <div className="text-wt-caption font-bold text-wt-text-secondary">Proteína</div>
                   <div className="text-sm font-black text-wt-accent-text">
                     {plan.nutrition.macros.proteinGrams}g
                   </div>
                 </div>
                 <div className="rounded-wt-md bg-wt-surface-elevated p-2">
-                  <div className="text-[0.65rem] font-bold text-wt-text-secondary">
+                  <div className="text-wt-caption font-bold text-wt-text-secondary">
                     Carboidratos
                   </div>
                   <div className="text-sm font-black text-wt-success-text">
@@ -223,7 +223,7 @@ export function AiCoachSection({ draft, onApplyPlan }: AiCoachModalProps) {
                   </div>
                 </div>
                 <div className="rounded-wt-md bg-wt-surface-elevated p-2">
-                  <div className="text-[0.65rem] font-bold text-wt-text-secondary">Gorduras</div>
+                  <div className="text-wt-caption font-bold text-wt-text-secondary">Gorduras</div>
                   <div className="text-sm font-black text-wt-warning-text">
                     {plan.nutrition.macros.fatsGrams}g
                   </div>
@@ -251,7 +251,7 @@ export function AiCoachSection({ draft, onApplyPlan }: AiCoachModalProps) {
                     >
                       <div className="flex items-center justify-between font-bold text-wt-text-primary">
                         <span>{meal.meal}</span>
-                        <span className="text-[0.65rem] font-semibold text-wt-accent-text">
+                        <span className="text-wt-caption font-semibold text-wt-accent-text">
                           P: {meal.protein} · C: {meal.carbs}
                         </span>
                       </div>

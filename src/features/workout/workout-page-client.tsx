@@ -756,7 +756,6 @@ export function WorkoutPageClient({ autosaveDelayMs = 550 }: WorkoutPageClientPr
         </div>
       ) : (
         <div className="space-y-6">
-          <AiCoachSection draft={onboardingDraft} onApplyPlan={handleApplyAiPlan} />
           <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_19rem] lg:items-start">
             <div className="min-w-0 space-y-4">
               {awaitingFinish ? (
@@ -1023,6 +1022,8 @@ export function WorkoutPageClient({ autosaveDelayMs = 550 }: WorkoutPageClientPr
               </Card>
             </aside>
           </div>
+          {/* Apoio secundário: abaixo do exercício para a série atual nunca ser empurrada. */}
+          <AiCoachSection draft={onboardingDraft} onApplyPlan={handleApplyAiPlan} />
         </div>
       )}
 
